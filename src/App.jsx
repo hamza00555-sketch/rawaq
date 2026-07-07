@@ -3,6 +3,7 @@ import { LANGS, t } from "./i18n.js";
 import { DEFAULT_PIN, DEFAULT_ROOMS, STORAGE_KEYS, buildToday, todayStr } from "./data.js";
 import { useStoredState } from "./storage.js";
 import { decodeWorkerHash } from "./share.js";
+import { parseShortHash } from "./shares.js";
 
 import SplashScreen from "./screens/SplashScreen.jsx";
 import HomeScreen from "./screens/HomeScreen.jsx";
@@ -17,8 +18,10 @@ import ShareModal from "./components/ShareModal.jsx";
 import PinModal from "./components/PinModal.jsx";
 
 export default function App() {
-  // A #worker= link renders the standalone worker view (worker's own phone)
+  // A #w= (short) or legacy #worker= link renders the standalone worker view
+  const shortId = useMemo(() => parseShortHash(window.location.hash), []);
   const workerPayload = useMemo(() => decodeWorkerHash(window.location.hash), []);
+  if (shortId) return <WorkerView shortId={shortId} />;
   if (workerPayload) return <WorkerView payload={workerPayload} />;
   return <MainApp />;
 }
@@ -118,7 +121,7 @@ function MainApp() {
           owner={owner}
           today={safeToday}
           rooms={rooms}
-          setTab={setTab}
+          setRooms={setRooms}
           onShare={() => setShareOpen(true)}
           onWorkerMode={() => {
             setWorkerPinError("");

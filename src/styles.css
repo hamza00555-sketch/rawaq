@@ -161,6 +161,43 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible {
 .btn-danger { background: var(--danger); color: #fff; }
 .btn-block { width: 100%; }
 
+.btn-hero {
+  min-height: 62px;
+  font-size: 19px;
+  border-radius: 18px;
+}
+
+label.btn {
+  position: relative;
+  cursor: pointer;
+}
+
+label.btn:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.room-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 84px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 2px solid transparent;
+  font-size: 15px;
+  font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.room-chip.selected {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;

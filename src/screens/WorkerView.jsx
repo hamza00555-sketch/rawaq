@@ -1,12 +1,35 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { t } from "../i18n.js";
 import { press } from "../press.js";
+import { fetchShare } from "../shares.js";
 import RawaqLogo from "../components/RawaqLogo.jsx";
 
-// Standalone read-only view opened from a #worker= link on the worker's own
-// phone. No PIN, no navigation; check state lives only on her device.
-export default function WorkerView({ payload }) {
-  const [tasks, setTasks] = useState(payload.tasks || []);
+// Standalone read-only view on the worker's own phone. Opened either via a
+// short #w= link (fetched from Firestore) or a legacy #worker= payload.
+export default function WorkerView({ payload, shortId }) {
+  const [tasks, setTasks] = useState(payload?.tasks || []);
+  const [date, setDate] = useState(payload?.date || "");
+  const [status, setStatus] = useState(payload ? "ready" : "loading");
+
+  useEffect(() => {
+    if (!shortId) return;
+    let cancelled = false;
+    fetchShare(shortId)
+      .then((data) => {
+        if (cancelled) return;
+        if (data) {
+          setTasks(data.tasks || []);
+          setDate(data.date || "");
+          setStatus("ready");
+        } else {
+          setStatus("error");
+        }
+      })
+      .catch(() => !cancelled && setStatus("error"));
+    return () => {
+      cancelled = true;
+    };
+  }, [shortId]);
 
   const total = tasks.length;
   const done = tasks.filter((x) => x.done).length;
@@ -14,6 +37,21 @@ export default function WorkerView({ payload }) {
 
   const toggle = (task) =>
     setTasks(tasks.map((x) => (x.id === task.id ? { ...x, done: !x.done } : x)));
+
+  if (status !== "ready") {
+    return (
+      <div className="app rawaq-worker" dir="ltr" lang="fil">
+        <div className="screen center-text" style={{ paddingTop: 120 }}>
+          <div className="stack" style={{ alignItems: "center" }}>
+            <RawaqLogo size={72} />
+            <p className="muted" role="status" style={{ fontSize: 18 }}>
+              {status === "loading" ? t("fil", "loadingTasks") : t("fil", "linkError")}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app rawaq-worker" dir="ltr" lang="fil">
@@ -23,7 +61,7 @@ export default function WorkerView({ payload }) {
             <RawaqLogo size={38} />
             <div>
               <h1 style={{ fontSize: 20 }}>{t("fil", "workerHeader")}</h1>
-              <p className="muted" style={{ fontSize: 13 }}>{payload.date}</p>
+              <p className="muted" style={{ fontSize: 13 }}>{date}</p>
             </div>
           </div>
         </header>

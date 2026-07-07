@@ -1,9 +1,6 @@
-import { useRef } from "react";
-import { press } from "../press.js";
-
+// Native label-wrapped file input: opens the picker on every mobile browser
+// without programmatic click() (which lacks activation from pointerdown).
 export default function PhotoUploader({ label, onPhoto }) {
-  const inputRef = useRef(null);
-
   const handleFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -14,19 +11,14 @@ export default function PhotoUploader({ label, onPhoto }) {
   };
 
   return (
-    <>
-      <button type="button" className="btn btn-soft btn-block" {...press(() => inputRef.current?.click())}>
-        📷 {label}
-      </button>
+    <label className="btn btn-soft btn-block photo-label">
+      📷 {label}
       <input
-        ref={inputRef}
         type="file"
         accept="image/*"
         onChange={handleFile}
-        style={{ display: "none" }}
-        aria-hidden="true"
-        tabIndex={-1}
+        style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
       />
-    </>
+    </label>
   );
 }

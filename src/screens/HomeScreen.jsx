@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { t } from "../i18n.js";
 import { press } from "../press.js";
 import ProgressRing from "../components/ProgressRing.jsx";
 import RawaqLogo from "../components/RawaqLogo.jsx";
+import CreateTaskSheet from "../components/CreateTaskSheet.jsx";
 
-export default function HomeScreen({ lang, owner, today, rooms, setTab, onShare, onWorkerMode }) {
+export default function HomeScreen({ lang, owner, today, rooms, setRooms, onShare, onWorkerMode }) {
+  const [createOpen, setCreateOpen] = useState(false);
+
   const total = today.tasks.length;
   const done = today.tasks.filter((x) => x.done).length;
   const percent = total ? Math.round((done / total) * 100) : 0;
@@ -30,42 +34,26 @@ export default function HomeScreen({ lang, owner, today, rooms, setTab, onShare,
         </span>
       </section>
 
-      <h2 className="section-title">{t(lang, "roomsSummary")}</h2>
-      <div className="rooms-grid">
-        {rooms.map((room) => {
-          const roomTasks = today.tasks.filter((x) => x.roomId === room.id);
-          const roomDone = roomTasks.filter((x) => x.done).length;
-          return (
-            <button
-              key={room.id}
-              type="button"
-              className="room-card"
-              {...press(() => setTab("rooms"))}
-            >
-              <div className="room-card-body">
-                <h3>
-                  {room.emoji} {room.name[lang] || room.name.ar}
-                </h3>
-                <p className="muted" style={{ fontSize: 14 }}>
-                  {roomDone}/{roomTasks.length} {t(lang, "tasks")}
-                </p>
-                <div className="progress-bar" style={{ marginTop: 8 }}>
-                  <div style={{ width: roomTasks.length ? `${(roomDone / roomTasks.length) * 100}%` : 0 }} />
-                </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
       <div className="stack" style={{ marginTop: 24 }}>
-        <button type="button" className="btn btn-primary btn-block" {...press(onShare)}>
+        <button type="button" className="btn btn-primary btn-block btn-hero" {...press(() => setCreateOpen(true))}>
+          ＋ {t(lang, "createTask")}
+        </button>
+        <button type="button" className="btn btn-soft btn-block" {...press(onShare)}>
           📤 {t(lang, "shareTasks")}
         </button>
         <button type="button" className="btn btn-soft btn-block" {...press(onWorkerMode)}>
           🧕 {t(lang, "workerMode")}
         </button>
       </div>
+
+      <CreateTaskSheet
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        lang={lang}
+        rooms={rooms}
+        setRooms={setRooms}
+        defaultMode={today.mode}
+      />
     </div>
   );
 }
