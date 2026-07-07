@@ -9,6 +9,7 @@ import FreqDepthPicker from "../components/FreqDepthPicker.jsx";
 import TaskEditSheet from "../components/TaskEditSheet.jsx";
 import RoomEditorSheet from "../components/RoomEditorSheet.jsx";
 import Snackbar from "../components/Snackbar.jsx";
+import Icon from "../components/Icons.jsx";
 
 const badge = (lang, task) => (
   <>
@@ -57,14 +58,14 @@ function RoomDetail({ lang, room, updateRoom, onEditRoom, onBack }) {
       <header className="appbar">
         <div className="row">
           <button type="button" className="icon-btn" aria-label={t(lang, "back")} {...press(onBack)}>
-            {lang === "ar" ? "→" : "←"}
+            <Icon name={lang === "ar" ? "chevron-right" : "chevron-left"} size={22} />
           </button>
           <h1>
             {room.emoji} {room.name[lang] || room.name.ar}
           </h1>
         </div>
         <button type="button" className="icon-btn" aria-label={t(lang, "editRoom")} {...press(onEditRoom)}>
-          ✎
+          <Icon name="pencil" size={20} />
         </button>
       </header>
 
@@ -100,7 +101,7 @@ function RoomDetail({ lang, room, updateRoom, onEditRoom, onBack }) {
       </div>
 
       <button type="button" className="btn btn-soft btn-block" style={{ marginTop: 16 }} {...press(() => setSheetOpen(true))}>
-        ＋ {t(lang, "addTask")}
+        <Icon name="plus" size={20} /> {t(lang, "addTask")}
       </button>
 
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={t(lang, "addTask")}>
@@ -224,7 +225,7 @@ export default function RoomsScreen({ lang, rooms, setRooms }) {
             setEditorOpen(true);
           })}
         >
-          <span style={{ fontSize: 34 }} aria-hidden="true">＋</span>
+          <Icon name="plus" size={32} />
           <span style={{ fontWeight: 600 }}>{t(lang, "addRoom")}</span>
         </button>
       </div>

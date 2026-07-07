@@ -4,6 +4,7 @@ import { taskFingerprint, todayStr } from "../data.js";
 import { createShare, shareIdFromLink } from "../shares.js";
 import BottomSheet from "./BottomSheet.jsx";
 import QRCanvas from "./QRCanvas.jsx";
+import Icon from "./Icons.jsx";
 
 export default function ShareModal({ open, onClose, lang, today, owner, rooms, lastShare, onShared }) {
   const [copied, setCopied] = useState(false);
@@ -99,7 +100,7 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, l
               {t(lang, "shareError")}
             </p>
             <button type="button" className="btn btn-primary" onClick={prepare}>
-              🔄 {t(lang, "retry")}
+              <Icon name="refresh" size={20} /> {t(lang, "retry")}
             </button>
           </div>
         )}
@@ -114,7 +115,13 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, l
         )}
 
         <button type="button" className="btn btn-soft btn-block" disabled={!ready} onClick={copy}>
-          {copied ? t(lang, "copied") : `🔗 ${t(lang, "copyLink")}`}
+          {copied ? (
+            t(lang, "copied")
+          ) : (
+            <>
+              <Icon name="link" size={20} /> {t(lang, "copyLink")}
+            </>
+          )}
         </button>
         <button type="button" className="btn btn-primary btn-block" disabled={!ready} onClick={whatsapp}>
           {t(lang, "whatsapp")}

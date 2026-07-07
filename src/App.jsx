@@ -149,11 +149,11 @@ function MainApp() {
   const nextVisit = nextVisitDate(contract);
   const banner =
     nextVisit === todayStr() && lastShare?.date !== todayStr()
-      ? { icon: "🧹", message: t(lang, "visitTodayBanner") }
+      ? { icon: "sparkles", message: t(lang, "visitTodayBanner") }
       : nextVisit === addDays(todayStr(), 1)
-        ? { icon: "🌿", message: t(lang, "visitTomorrowBanner") }
+        ? { icon: "leaf", message: t(lang, "visitTomorrowBanner") }
         : needsReshare
-          ? { icon: "🔄", message: t(lang, "tasksChanged") }
+          ? { icon: "refresh", message: t(lang, "tasksChanged") }
           : null;
 
   const showShareUi = tab === "home" || tab === "today";

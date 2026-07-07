@@ -1,4 +1,5 @@
 import { press } from "../press.js";
+import Icon from "./Icons.jsx";
 
 export default function BottomSheet({ open, onClose, title, children }) {
   if (!open) return null;
@@ -15,7 +16,7 @@ export default function BottomSheet({ open, onClose, title, children }) {
           <div className="row spread" style={{ marginBottom: 14 }}>
             <h2 style={{ fontSize: 19 }}>{title}</h2>
             <button type="button" className="icon-btn" aria-label="close" {...press(onClose)}>
-              ✕
+              <Icon name="x" size={20} />
             </button>
           </div>
         )}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { LANGS, t } from "../i18n.js";
 import { contractEnd, formatDate, isContractExpired, nextVisitDate, remainingVisits, todayStr } from "../data.js";
 import { press } from "../press.js";
+import Icon from "../components/Icons.jsx";
 
 // 2023-01-01 was a Sunday — reference week for localized weekday names.
 const weekdayName = (lang, day) => {
@@ -66,7 +67,7 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
               aria-pressed={theme === "light"}
               {...press(() => setTheme("light"))}
             >
-              ☀️ {t(lang, "light")}
+              <Icon name="sun" size={18} /> {t(lang, "light")}
             </button>
             <button
               type="button"
@@ -74,7 +75,7 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
               aria-pressed={theme === "dark"}
               {...press(() => setTheme("dark"))}
             >
-              🌙 {t(lang, "dark")}
+              <Icon name="moon" size={18} /> {t(lang, "dark")}
             </button>
           </div>
         </div>

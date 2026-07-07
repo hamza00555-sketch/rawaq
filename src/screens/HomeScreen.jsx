@@ -5,6 +5,7 @@ import { press } from "../press.js";
 import ProgressRing from "../components/ProgressRing.jsx";
 import RawaqLogo from "../components/RawaqLogo.jsx";
 import CreateTaskSheet from "../components/CreateTaskSheet.jsx";
+import Icon from "../components/Icons.jsx";
 
 export default function HomeScreen({ lang, owner, today, rooms, setRooms, history, onShare, nextVisit }) {
   const [createOpen, setCreateOpen] = useState(false);
@@ -37,7 +38,7 @@ export default function HomeScreen({ lang, owner, today, rooms, setRooms, histor
         </p>
         {nextVisit && (
           <span className="muted" style={{ fontSize: 14 }}>
-            🗓️ {t(lang, "nextVisit")}: {formatDate(lang, nextVisit)}
+            <Icon name="calendar" size={16} /> {t(lang, "nextVisit")}: {formatDate(lang, nextVisit)}
           </span>
         )}
         {complete && (
@@ -49,10 +50,10 @@ export default function HomeScreen({ lang, owner, today, rooms, setRooms, histor
 
       <div className="stack" style={{ marginTop: 20 }}>
         <button type="button" className="btn btn-primary btn-block btn-hero" {...press(onShare)}>
-          📤 {t(lang, "shareHero")}
+          <Icon name="share" size={22} /> {t(lang, "shareHero")}
         </button>
         <button type="button" className="btn btn-soft btn-block" style={{ minHeight: 54 }} {...press(() => setCreateOpen(true))}>
-          ＋ {t(lang, "createTask")}
+          <Icon name="plus" size={20} /> {t(lang, "createTask")}
         </button>
       </div>
 

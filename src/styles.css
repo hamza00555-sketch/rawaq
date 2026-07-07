@@ -1,69 +1,111 @@
-/* ============ رواق — Design System ============ */
+/* ============ رواق — Liquid Glass Design System ============ */
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --radius: 18px;
-  --radius-sm: 12px;
-  --font-ar: "Noto Kufi Arabic", system-ui, sans-serif;
-  --font-latin: "DM Sans", system-ui, sans-serif;
+  --radius: 22px;
+  --radius-sm: 16px;
+  --font-ar: "Alexandria", system-ui, sans-serif;
+  --font-latin: "Alexandria", system-ui, sans-serif;
 }
 
-/* ---------- Light theme ---------- */
+/* ---------- Light: warm cream + coral/peach/gold blobs ---------- */
 .rawaq-light {
-  --bg: #F6F5F0;
-  --surface: #FFFFFF;
-  --surface-2: #EEECE5;
-  --text: #1F2A26;
-  --text-2: #58655F;
-  --primary: #22684E;
-  --primary-strong: #1B5540;
-  --primary-soft: #DDEBE3;
+  --bg: #FBF6EF;
+  --blob-a: rgba(255, 122, 89, 0.55);
+  --blob-b: rgba(255, 194, 158, 0.55);
+  --blob-c: rgba(255, 217, 142, 0.55);
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-blur: rgba(255, 252, 247, 0.6);
+  --surface-solid: #FFFDF8;
+  --row-solid: #FFF9F3;
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-hilite: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --surface: var(--glass);
+  --surface-2: rgba(255, 236, 224, 0.75);
+  --text: #35231D;
+  --text-2: #6B564B;
+  --primary: #BC4327;
+  --primary-strong: #A03521;
+  --primary-soft: rgba(255, 150, 115, 0.25);
   --on-primary: #FFFFFF;
-  --danger: #B3423A;
-  --border: #E3E1D9;
-  --ring-track: #E4E2DA;
-  --focus: #22684E;
-  --shadow: 0 2px 14px rgba(31, 42, 38, 0.08);
-  --nav-bg: rgba(255, 255, 255, 0.92);
+  --badge-text: #96311E;
+  --gold: #E8A33D;
+  --danger: #B3362B;
+  --border: rgba(154, 70, 40, 0.14);
+  --ring-track: rgba(154, 70, 40, 0.14);
+  --focus: #BC4327;
+  --shadow: 0 8px 28px rgba(154, 70, 40, 0.14);
+  --nav-bg: rgba(255, 252, 247, 0.62);
+  --seg-track: rgba(90, 40, 20, 0.06);
+  --snack-bg: rgba(43, 26, 20, 0.82);
+  --snack-text: #FFF6EF;
 }
 
-/* ---------- Dark theme ---------- */
+/* ---------- Dark: warm charcoal-plum + ember glows ---------- */
 .rawaq-dark {
-  --bg: #131715;
-  --surface: #1C221F;
-  --surface-2: #252C28;
-  --text: #E8EDEA;
-  --text-2: #A3ADA7;
-  --primary: #8FCFAC;
-  --primary-strong: #A9DCBF;
-  --primary-soft: #24382F;
-  --on-primary: #10201A;
-  --danger: #E88A82;
-  --border: #2C332F;
-  --ring-track: #2C332F;
-  --focus: #8FCFAC;
-  --shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
-  --nav-bg: rgba(28, 34, 31, 0.92);
+  --bg: #221619;
+  --blob-a: rgba(255, 110, 64, 0.3);
+  --blob-b: rgba(255, 170, 90, 0.22);
+  --blob-c: rgba(120, 60, 90, 0.35);
+  --glass: rgba(46, 32, 35, 0.62);
+  --glass-blur: rgba(40, 28, 31, 0.55);
+  --surface-solid: #2C1F22;
+  --row-solid: #35262A;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hilite: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --surface: var(--glass);
+  --surface-2: rgba(255, 155, 126, 0.1);
+  --text: #F6EDE7;
+  --text-2: #CBB3A8;
+  --primary: #FF9B7E;
+  --primary-strong: #FFB097;
+  --primary-soft: rgba(255, 155, 126, 0.16);
+  --on-primary: #331109;
+  --badge-text: #FFBCA5;
+  --gold: #F2BA62;
+  --danger: #FF9A8B;
+  --border: rgba(255, 255, 255, 0.1);
+  --ring-track: rgba(255, 255, 255, 0.12);
+  --focus: #FF9B7E;
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --nav-bg: rgba(40, 28, 31, 0.55);
+  --seg-track: rgba(255, 255, 255, 0.06);
+  --snack-bg: rgba(53, 38, 42, 0.92);
+  --snack-text: #F6EDE7;
 }
 
-/* ---------- Worker theme (always dark, violet identity) ---------- */
+/* ---------- Worker: dusk violet-plum glass (always dark) ---------- */
 .rawaq-worker {
-  --bg: #15131D;
-  --surface: #1F1C2B;
-  --surface-2: #282438;
-  --text: #EDEAF7;
-  --text-2: #ABA5C4;
-  --primary: #B9A5FB;
-  --primary-strong: #CBBCFC;
-  --primary-soft: #2E2745;
-  --on-primary: #17122A;
-  --danger: #E88A82;
-  --border: #322D47;
-  --ring-track: #322D47;
-  --focus: #B9A5FB;
-  --shadow: 0 2px 14px rgba(0, 0, 0, 0.4);
-  --nav-bg: rgba(31, 28, 43, 0.92);
+  --bg: #1C1424;
+  --blob-a: rgba(139, 92, 246, 0.28);
+  --blob-b: rgba(255, 122, 120, 0.16);
+  --blob-c: rgba(80, 50, 120, 0.35);
+  --glass: rgba(42, 33, 54, 0.62);
+  --glass-blur: rgba(37, 28, 48, 0.55);
+  --surface-solid: #271E33;
+  --row-solid: #322843;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hilite: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --surface: var(--glass);
+  --surface-2: rgba(201, 178, 255, 0.1);
+  --text: #F0EAF8;
+  --text-2: #BFB0D6;
+  --primary: #C9B2FF;
+  --primary-strong: #DACAFF;
+  --primary-soft: rgba(201, 178, 255, 0.16);
+  --on-primary: #221240;
+  --badge-text: #D4C2FF;
+  --gold: #F2BA62;
+  --danger: #FF9A8B;
+  --border: rgba(255, 255, 255, 0.1);
+  --ring-track: rgba(255, 255, 255, 0.12);
+  --focus: #C9B2FF;
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  --nav-bg: rgba(37, 28, 48, 0.55);
+  --seg-track: rgba(255, 255, 255, 0.06);
+  --snack-bg: rgba(50, 40, 67, 0.92);
+  --snack-text: #F0EAF8;
 }
 
 html, body, #root { height: 100%; }
@@ -77,12 +119,39 @@ body {
 html[lang="ar"] body { font-family: var(--font-ar); }
 
 .app {
+  position: relative;
+  isolation: isolate;
   min-height: 100%;
   background: var(--bg);
   color: var(--text);
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.65;
   transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ---------- Ambient sunset blobs (compositor-only drift) ---------- */
+.app::before,
+.app::after {
+  content: "";
+  position: fixed;
+  inset: -12%;
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.app::before {
+  background:
+    radial-gradient(42% 38% at 18% 22%, var(--blob-a) 0%, transparent 70%),
+    radial-gradient(46% 40% at 85% 12%, var(--blob-c) 0%, transparent 70%);
+  animation: blob-drift-a 26s ease-in-out infinite alternate;
+}
+
+.app::after {
+  background:
+    radial-gradient(44% 42% at 78% 82%, var(--blob-b) 0%, transparent 70%),
+    radial-gradient(36% 34% at 12% 78%, var(--blob-c) 0%, transparent 70%);
+  animation: blob-drift-b 34s ease-in-out infinite alternate;
 }
 
 /* ---------- Layout ---------- */
@@ -102,7 +171,7 @@ html[lang="ar"] body { font-family: var(--font-ar); }
 }
 
 .appbar h1 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
 }
 
@@ -112,13 +181,14 @@ html[lang="ar"] body { font-family: var(--font-ar); }
   margin: 22px 0 10px;
 }
 
-.muted { color: var(--text-2); font-size: 15px; }
+.muted { color: var(--text-2); font-size: 15px; font-weight: 400; }
 
-/* ---------- Cards ---------- */
+/* ---------- Glass cards ---------- */
 .card {
-  background: var(--surface);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--glass-hilite), var(--shadow);
   padding: 18px;
 }
 
@@ -132,7 +202,7 @@ button {
   touch-action: manipulation;
 }
 
-button:focus-visible, [tabindex]:focus-visible, input:focus-visible {
+button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
@@ -144,27 +214,37 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible {
   justify-content: center;
   gap: 8px;
   min-height: 48px;
-  padding: 10px 20px;
-  border-radius: 14px;
+  padding: 10px 22px;
+  border-radius: 24px;
   font-size: 16px;
   font-weight: 600;
-  background: var(--surface-2);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-hilite);
   color: var(--text);
   transition: transform 0.12s ease, background 0.2s ease;
 }
 
 .btn:active { transform: scale(0.97); }
 
-.btn-primary { background: var(--primary); color: var(--on-primary); }
-.btn-primary:active { background: var(--primary-strong); }
-.btn-soft { background: var(--primary-soft); color: var(--text); }
-.btn-danger { background: var(--danger); color: #fff; }
+.btn-primary {
+  background: linear-gradient(160deg, var(--primary) 0%, var(--primary-strong) 100%);
+  border-color: transparent;
+  color: var(--on-primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), var(--shadow);
+}
+.btn-soft {
+  background: var(--primary-soft);
+  border-color: var(--glass-border);
+  color: var(--text);
+}
+.btn-danger { background: var(--danger); border-color: transparent; color: #fff; }
 .btn-block { width: 100%; }
 
 .btn-hero {
   min-height: 62px;
-  font-size: 19px;
-  border-radius: 18px;
+  font-size: 18px;
+  border-radius: 31px;
 }
 
 label.btn {
@@ -185,8 +265,9 @@ label.btn:focus-within {
   min-height: 84px;
   padding: 12px;
   border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  border: 2px solid transparent;
+  background: var(--glass);
+  border: 1.5px solid var(--glass-border);
+  box-shadow: var(--glass-hilite);
   font-size: 15px;
   font-weight: 600;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -204,17 +285,19 @@ label.btn:focus-within {
   justify-content: center;
   min-width: 48px;
   min-height: 48px;
-  border-radius: 14px;
-  background: var(--surface-2);
+  border-radius: 16px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-hilite);
   transition: transform 0.12s ease;
 }
 .icon-btn:active { transform: scale(0.94); }
 
-/* ---------- Segmented control ---------- */
+/* ---------- Segmented control: tinted track + floating glass thumb ---------- */
 .seg {
   display: flex;
-  background: var(--surface-2);
-  border-radius: 14px;
+  background: var(--seg-track);
+  border-radius: 24px;
   padding: 4px;
   gap: 4px;
 }
@@ -222,7 +305,7 @@ label.btn:focus-within {
 .seg-btn {
   flex: 1;
   min-height: 44px;
-  border-radius: 11px;
+  border-radius: 20px;
   font-size: 15px;
   font-weight: 600;
   color: var(--text-2);
@@ -230,20 +313,22 @@ label.btn:focus-within {
 }
 
 .seg-btn.active {
-  background: var(--primary-soft);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-hilite), 0 2px 10px rgba(0, 0, 0, 0.1);
   color: var(--primary);
-  box-shadow: var(--shadow);
 }
 
-/* ---------- Task rows ---------- */
+/* ---------- Task rows (glass shell, opaque sliding inner) ---------- */
 .task-list { display: flex; flex-direction: column; gap: 10px; }
 
 .task-row {
   position: relative;
   overflow: hidden;
-  background: var(--surface);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
+  box-shadow: var(--glass-hilite), var(--shadow);
   min-height: 56px;
   user-select: none;
   -webkit-user-select: none;
@@ -257,7 +342,7 @@ label.btn:focus-within {
   gap: 14px;
   padding: 14px 16px;
   min-height: 56px;
-  background: var(--surface);
+  background: var(--row-solid);
   transition: transform 0.15s ease;
 }
 
@@ -274,11 +359,10 @@ label.btn:focus-within {
 }
 
 .task-row.dragging {
-  opacity: 0.9;
+  opacity: 0.92;
   animation: shake 0.35s ease-in-out infinite;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.25);
   z-index: 2;
-  position: relative;
 }
 
 .task-row.done .task-name {
@@ -296,8 +380,8 @@ label.btn:focus-within {
   width: 30px;
   height: 30px;
   flex-shrink: 0;
-  border-radius: 10px;
-  border: 2px solid var(--border);
+  border-radius: 11px;
+  border: 1.5px solid var(--border);
   background: var(--surface-2);
   color: transparent;
   font-size: 17px;
@@ -306,9 +390,30 @@ label.btn:focus-within {
 }
 
 .task-row.done .task-check {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: linear-gradient(160deg, var(--primary), var(--primary-strong));
+  border-color: transparent;
   color: var(--on-primary);
+}
+
+.task-badge {
+  display: inline-block;
+  margin-inline-start: 8px;
+  padding: 2px 10px;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text-2);
+  vertical-align: middle;
+}
+
+.task-badge.badge-deep {
+  background: var(--primary-soft);
+  color: var(--badge-text);
+}
+
+.task-badge.badge-monthly {
+  border: 1px solid var(--border);
 }
 
 .drag-handle { color: var(--text-2); flex-shrink: 0; letter-spacing: 2px; }
@@ -331,7 +436,16 @@ label.btn:focus-within {
   justify-content: center;
 }
 
-.ring-pct { font-size: 34px; font-weight: 700; color: var(--primary); }
+.ring-pct { font-size: 32px; font-weight: 700; color: var(--primary); }
+
+.ring-celebrate { animation: celebrate-pulse 1.6s ease-in-out 2; }
+
+.celebrate-pop { animation: pop-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+
+.congrats {
+  color: var(--primary);
+  font-weight: 700;
+}
 
 /* ---------- Rooms grid ---------- */
 .rooms-grid {
@@ -345,9 +459,10 @@ label.btn:focus-within {
   flex-direction: column;
   align-items: stretch;
   text-align: start;
-  background: var(--surface);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--glass-hilite), var(--shadow);
   overflow: hidden;
   transition: transform 0.12s ease;
 }
@@ -373,7 +488,20 @@ label.btn:focus-within {
 .room-card-body { padding: 12px 14px 14px; }
 .room-card-body h3 { font-size: 16px; font-weight: 600; }
 
-/* ---------- Bottom nav ---------- */
+.add-room-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 160px;
+  background: transparent;
+  border: 2px dashed var(--glass-border);
+  box-shadow: none;
+  color: var(--text-2);
+}
+
+/* ---------- Bottom nav: the one persistent frosted layer ---------- */
 .bottom-nav {
   position: fixed;
   bottom: 14px;
@@ -383,11 +511,11 @@ label.btn:focus-within {
   display: flex;
   justify-content: space-around;
   background: var(--nav-bg);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 28px;
+  box-shadow: var(--glass-hilite), var(--shadow);
   padding: 8px 6px;
   z-index: 20;
 }
@@ -400,7 +528,7 @@ label.btn:focus-within {
   min-width: 56px;
   min-height: 52px;
   padding: 6px 8px;
-  border-radius: 14px;
+  border-radius: 18px;
   font-size: 12px;
   font-weight: 600;
   color: var(--text-2);
@@ -409,11 +537,11 @@ label.btn:focus-within {
 .nav-btn.active { color: var(--primary); background: var(--primary-soft); }
 .nav-btn svg { width: 24px; height: 24px; }
 
-/* ---------- Bottom sheet & modal ---------- */
+/* ---------- Overlays: dim only; sheet/modal carry the blur ---------- */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 14, 12, 0.5);
+  background: rgba(24, 12, 9, 0.45);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -425,8 +553,13 @@ label.btn:focus-within {
 
 .sheet {
   width: min(640px, 100%);
-  background: var(--surface);
-  border-radius: 24px 24px 0 0;
+  background: var(--glass-blur);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid var(--glass-border);
+  border-bottom: none;
+  border-radius: 28px 28px 0 0;
+  box-shadow: var(--glass-hilite), var(--shadow);
   padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
   animation: slide-up 0.25s ease;
   max-height: 85vh;
@@ -442,12 +575,24 @@ label.btn:focus-within {
 }
 
 .modal {
-  background: var(--surface);
+  background: var(--glass-blur);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--glass-hilite), var(--shadow);
   padding: 24px;
   width: min(400px, 100%);
   animation: pop-in 0.2s ease;
+}
+
+/* QR stays dark-on-white for scannability, framed as a white glass chip */
+.sheet canvas, .modal canvas {
+  background: #fff;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-hilite), var(--shadow);
 }
 
 /* ---------- Inputs ---------- */
@@ -455,9 +600,10 @@ label.btn:focus-within {
   width: 100%;
   min-height: 50px;
   padding: 12px 16px;
-  border-radius: 14px;
-  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
   background: var(--surface-2);
+  box-shadow: var(--glass-hilite);
   color: var(--text);
   font: inherit;
   font-size: 16px;
@@ -465,7 +611,9 @@ label.btn:focus-within {
 
 .input::placeholder { color: var(--text-2); }
 
-/* ---------- PIN pad ---------- */
+select.input { appearance: auto; }
+
+/* ---------- PIN pad (kept for potential reuse) ---------- */
 .pin-dots {
   display: flex;
   justify-content: center;
@@ -491,8 +639,10 @@ label.btn:focus-within {
 
 .pin-key {
   min-height: 62px;
-  border-radius: 16px;
-  background: var(--surface-2);
+  border-radius: 20px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-hilite);
   font-size: 22px;
   font-weight: 600;
   transition: transform 0.1s ease;
@@ -501,14 +651,15 @@ label.btn:focus-within {
 
 .pin-error { animation: shake-x 0.4s ease; }
 
-/* ---------- History ---------- */
+/* ---------- History & settings ---------- */
 .history-item {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: var(--surface);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
+  box-shadow: var(--glass-hilite), var(--shadow);
   padding: 16px;
 }
 
@@ -522,11 +673,10 @@ label.btn:focus-within {
 .progress-bar > div {
   height: 100%;
   border-radius: 5px;
-  background: var(--primary);
+  background: linear-gradient(90deg, var(--primary), var(--gold));
   transition: width 0.4s ease;
 }
 
-/* ---------- Settings rows ---------- */
 .setting-row {
   display: flex;
   align-items: center;
@@ -538,59 +688,6 @@ label.btn:focus-within {
 
 .setting-row + .setting-row { border-top: 1px solid var(--border); }
 
-/* ---------- Worker mode ---------- */
-.worker-task {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  width: 100%;
-  text-align: start;
-  background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 22px 20px;
-  min-height: 84px;
-  font-size: 20px;
-  font-weight: 600;
-  transition: transform 0.12s ease;
-}
-.worker-task:active { transform: scale(0.98); }
-
-.worker-task .task-check { width: 38px; height: 38px; border-radius: 12px; font-size: 22px; }
-.worker-task.done { color: var(--text-2); }
-.worker-task.done .task-check {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--on-primary);
-}
-.worker-task.done .task-name { text-decoration: line-through; text-decoration-thickness: 2.5px; }
-
-/* ---------- Splash ---------- */
-.splash {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  background: var(--bg);
-  color: var(--text);
-  z-index: 100;
-  animation: fade-in 0.4s ease;
-}
-
-.splash svg { animation: pop-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
-.splash h1 { font-size: 34px; font-weight: 700; color: var(--primary); }
-.splash p { color: var(--text-2); font-size: 17px; }
-.splash.leaving { animation: fade-out 0.35s ease forwards; }
-
-/* ---------- Utility ---------- */
-.row { display: flex; align-items: center; gap: 12px; }
-.spread { justify-content: space-between; }
-.stack { display: flex; flex-direction: column; gap: 12px; }
-.center-text { text-align: center; }
-
 /* ---------- Chips, emoji grid ---------- */
 .chip-wrap {
   display: flex;
@@ -600,10 +697,11 @@ label.btn:focus-within {
 
 .task-chip {
   min-height: 44px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 22px;
-  background: var(--surface-2);
-  border: 1.5px solid var(--border);
+  background: var(--glass);
+  border: 1.5px solid var(--glass-border);
+  box-shadow: var(--glass-hilite);
   font-size: 15px;
   font-weight: 500;
   transition: background 0.15s ease, border-color 0.15s ease;
@@ -628,8 +726,9 @@ label.btn:focus-within {
   min-height: 48px;
   font-size: 24px;
   border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  border: 2px solid transparent;
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  box-shadow: var(--glass-hilite);
 }
 
 .emoji-btn.selected {
@@ -637,20 +736,7 @@ label.btn:focus-within {
   background: var(--primary-soft);
 }
 
-.add-room-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 160px;
-  border: 2px dashed var(--border);
-  box-shadow: none;
-  color: var(--text-2);
-  background: transparent;
-}
-
-/* ---------- Share FAB, reshare banner, snackbar ---------- */
+/* ---------- Share FAB: opaque coral gradient with glow ---------- */
 .share-fab {
   position: fixed;
   bottom: 96px;
@@ -661,21 +747,23 @@ label.btn:focus-within {
   min-height: 62px;
   padding: 14px 24px;
   border-radius: 32px;
-  background: var(--primary);
+  background: linear-gradient(160deg, var(--primary) 0%, var(--primary-strong) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: var(--on-primary);
   font-size: 18px;
   font-weight: 700;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 26px rgba(188, 67, 39, 0.45);
   z-index: 25;
   transition: transform 0.12s ease;
 }
+
+.share-fab:active { transform: scale(0.94); }
 
 @media (prefers-reduced-motion: no-preference) {
   .share-fab { animation: fab-pulse 2.4s ease-in-out infinite; }
 }
 
-.share-fab:active { transform: scale(0.94); }
-
+/* ---------- Reshare / visit banner ---------- */
 .reshare-banner {
   position: fixed;
   top: 12px;
@@ -687,18 +775,21 @@ label.btn:focus-within {
   min-height: 46px;
   padding: 10px 18px;
   border-radius: 24px;
-  background: var(--primary-soft);
+  background: var(--glass-blur);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
   color: var(--primary);
   border: 1.5px solid var(--primary);
   font-size: 14px;
   font-weight: 600;
-  box-shadow: var(--shadow);
+  box-shadow: var(--glass-hilite), var(--shadow);
   z-index: 30;
   width: max-content;
   max-width: calc(100% - 24px);
   animation: slide-down 0.3s ease;
 }
 
+/* ---------- Snackbar ---------- */
 .snackbar {
   position: fixed;
   bottom: 96px;
@@ -709,11 +800,15 @@ label.btn:focus-within {
   gap: 16px;
   min-height: 52px;
   padding: 12px 20px;
-  border-radius: 16px;
-  background: var(--text);
-  color: var(--bg);
+  border-radius: 20px;
+  background: var(--snack-bg);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--snack-text);
   font-size: 15px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   z-index: 45;
   width: max-content;
   max-width: calc(100% - 24px);
@@ -722,63 +817,49 @@ label.btn:focus-within {
 
 .snackbar-undo {
   min-height: 44px;
-  padding: 6px 14px;
-  border-radius: 10px;
-  color: var(--bg);
-  background: rgba(255, 255, 255, 0.15);
+  padding: 6px 16px;
+  border-radius: 14px;
+  color: var(--snack-text);
+  background: rgba(255, 255, 255, 0.16);
   font-weight: 700;
 }
 
-.rawaq-dark .snackbar,
-.rawaq-worker .snackbar {
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.rawaq-dark .snackbar-undo,
-.rawaq-worker .snackbar-undo {
-  color: var(--primary);
-  background: var(--primary-soft);
-}
-
-/* ---------- Bigger checks on Today + celebration ---------- */
+/* ---------- Today list: bigger touch targets ---------- */
 .today-list .task-check {
   width: 38px;
   height: 38px;
-  border-radius: 12px;
+  border-radius: 13px;
   font-size: 22px;
 }
 
 .today-list .task-row-inner { min-height: 64px; }
 
-.congrats {
-  color: var(--primary);
-  font-weight: 700;
-}
-
-.ring-celebrate { animation: celebrate-pulse 1.6s ease-in-out 2; }
-
-.celebrate-pop { animation: pop-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
-
-.task-badge {
-  display: inline-block;
-  margin-inline-start: 8px;
-  padding: 2px 9px;
-  border-radius: 10px;
-  font-size: 12px;
+/* ---------- Worker mode ---------- */
+.worker-task {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  text-align: start;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-hilite), var(--shadow);
+  padding: 22px 20px;
+  min-height: 84px;
+  font-size: 20px;
   font-weight: 600;
-  background: var(--surface-2);
-  color: var(--text-2);
-  vertical-align: middle;
+  transition: transform 0.12s ease;
 }
+.worker-task:active { transform: scale(0.98); }
 
-.task-badge.badge-deep {
-  background: var(--primary-soft);
-  color: var(--primary);
-}
-
-.task-badge.badge-monthly {
-  border: 1px solid var(--border);
+.worker-task .task-check { width: 38px; height: 38px; border-radius: 13px; font-size: 22px; }
+.worker-task.done { color: var(--text-2); }
+.worker-task.done .task-name { text-decoration: line-through; text-decoration-thickness: 2.5px; }
+.worker-task.done .task-check {
+  background: linear-gradient(160deg, var(--primary), var(--primary-strong));
+  border-color: transparent;
+  color: var(--on-primary);
 }
 
 .worker-group-title {
@@ -788,24 +869,40 @@ label.btn:focus-within {
   margin-top: 8px;
 }
 
-/* ---------- Animations ---------- */
-@keyframes celebrate-pulse {
-  0%, 100% { transform: scale(1); filter: none; }
-  50% { transform: scale(1.05); filter: drop-shadow(0 0 14px var(--primary-soft)); }
-}
-@keyframes slide-down {
-  from { transform: translate(-50%, -20px); opacity: 0; }
-  to { transform: translate(-50%, 0); opacity: 1; }
-}
-@keyframes slide-up-center {
-  from { transform: translate(-50%, 24px); opacity: 0; }
-  to { transform: translate(-50%, 0); opacity: 1; }
-}
-@keyframes fab-pulse {
-  0%, 100% { box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3); transform: scale(1); }
-  50% { box-shadow: 0 6px 30px rgba(0, 0, 0, 0.38); transform: scale(1.04); }
+/* ---------- Splash / welcome (transparent so blobs show through) ---------- */
+.splash {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: transparent;
+  color: var(--text);
+  z-index: 100;
+  animation: fade-in 0.4s ease;
 }
 
+.splash svg { animation: pop-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+.splash h1 { font-size: 32px; font-weight: 700; color: var(--primary); }
+.splash p { color: var(--text-2); font-size: 17px; }
+.splash.leaving { animation: fade-out 0.35s ease forwards; }
+
+/* ---------- Utility ---------- */
+.row { display: flex; align-items: center; gap: 12px; }
+.spread { justify-content: space-between; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.center-text { text-align: center; }
+
+/* ---------- No-backdrop-filter fallback ---------- */
+@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  .bottom-nav, .sheet, .modal, .snackbar, .reshare-banner {
+    background: var(--surface-solid);
+  }
+}
+
+/* ---------- Animations ---------- */
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes slide-up { from { transform: translateY(40px); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
@@ -820,6 +917,30 @@ label.btn:focus-within {
   20%, 60% { transform: translateX(-8px); }
   40%, 80% { transform: translateX(8px); }
 }
+@keyframes celebrate-pulse {
+  0%, 100% { transform: scale(1); filter: none; }
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 14px var(--primary-soft)); }
+}
+@keyframes slide-down {
+  from { transform: translate(-50%, -20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+@keyframes slide-up-center {
+  from { transform: translate(-50%, 24px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+@keyframes fab-pulse {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 26px rgba(188, 67, 39, 0.45); transform: scale(1); }
+  50% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 10px 34px rgba(188, 67, 39, 0.6); transform: scale(1.04); }
+}
+@keyframes blob-drift-a {
+  from { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  to { transform: translate3d(4%, -3%, 0) rotate(6deg) scale(1.08); }
+}
+@keyframes blob-drift-b {
+  from { transform: translate3d(0, 0, 0) rotate(0deg) scale(1.06); }
+  to { transform: translate3d(-4%, 3%, 0) rotate(-6deg) scale(1); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -827,4 +948,6 @@ label.btn:focus-within {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  .app::before, .app::after { animation: none !important; }
+  .share-fab { animation: none !important; }
 }

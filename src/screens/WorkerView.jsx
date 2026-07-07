@@ -4,6 +4,7 @@ import { formatDate } from "../data.js";
 import { press } from "../press.js";
 import { fetchShare, updateShareTasks } from "../shares.js";
 import RawaqLogo from "../components/RawaqLogo.jsx";
+import Icon from "../components/Icons.jsx";
 
 // Standalone view on the worker's own phone, opened via a short #w= link
 // (or a legacy #worker= payload). Her checkmarks are written back to the
@@ -86,7 +87,9 @@ export default function WorkerView({ payload, shortId }) {
       aria-pressed={task.done}
       {...press(() => toggle(task))}
     >
-      <span className="task-check" aria-hidden="true">✓</span>
+      <span className="task-check" aria-hidden="true">
+        <Icon name="check" size="0.75em" strokeWidth={3} style={{ verticalAlign: 0 }} />
+      </span>
       <span className="task-name">{task.name.fil || task.name.ar}</span>
     </button>
   );

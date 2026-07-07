@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import Icon from "./Icons.jsx";
 
 // Gesture state machine — first intent wins:
 //   still ≥400ms (within 8px slop) → long-press drag (vibrate + shake)
@@ -129,8 +130,8 @@ export default function DraggableTaskList({ tasks, renderName, onToggle, onReord
         >
           {onSwipeDelete && (
             <span className="swipe-bg" aria-hidden="true">
-              <span>🗑</span>
-              <span>🗑</span>
+              <Icon name="trash" size={22} />
+              <Icon name="trash" size={22} />
             </span>
           )}
           <span
@@ -140,7 +141,11 @@ export default function DraggableTaskList({ tasks, renderName, onToggle, onReord
               transition: swipe?.id === task.id ? "none" : undefined,
             }}
           >
-            {showCheck && <span className="task-check" aria-hidden="true">✓</span>}
+            {showCheck && (
+              <span className="task-check" aria-hidden="true">
+                <Icon name="check" size="0.75em" strokeWidth={3} style={{ verticalAlign: 0 }} />
+              </span>
+            )}
             <span className="task-name">{renderName(task)}</span>
           </span>
         </li>

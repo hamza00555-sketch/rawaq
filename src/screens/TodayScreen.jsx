@@ -5,6 +5,7 @@ import { press } from "../press.js";
 import DraggableTaskList from "../components/DraggableTaskList.jsx";
 import AddTodayTaskSheet from "../components/AddTodayTaskSheet.jsx";
 import Snackbar from "../components/Snackbar.jsx";
+import Icon from "../components/Icons.jsx";
 
 export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisit }) {
   const [addOpen, setAddOpen] = useState(false);
@@ -102,7 +103,7 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
       </div>
 
       <button type="button" className="btn btn-soft btn-block" style={{ marginTop: 14 }} {...press(() => setAddOpen(true))}>
-        ＋ {t(lang, "addTodayTask")}
+        <Icon name="plus" size={20} /> {t(lang, "addTodayTask")}
       </button>
 
       {total > 0 && done === total && (
@@ -118,11 +119,15 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
           style={{ marginTop: 14 }}
           {...press(finish)}
         >
-          {savedMsg
-            ? t(lang, "visitSaved")
-            : confirmFinish
-              ? t(lang, "finishConfirm")
-              : `✅ ${t(lang, "finishVisit")}`}
+          {savedMsg ? (
+            t(lang, "visitSaved")
+          ) : confirmFinish ? (
+            t(lang, "finishConfirm")
+          ) : (
+            <>
+              <Icon name="check-circle" size={20} /> {t(lang, "finishVisit")}
+            </>
+          )}
         </button>
       )}
 

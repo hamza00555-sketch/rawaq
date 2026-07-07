@@ -1,3 +1,5 @@
+import Icon from "./Icons.jsx";
+
 // Native label-wrapped file input: opens the picker on every mobile browser
 // without programmatic click() (which lacks activation from pointerdown).
 export default function PhotoUploader({ label, onPhoto }) {
@@ -12,7 +14,7 @@ export default function PhotoUploader({ label, onPhoto }) {
 
   return (
     <label className="btn btn-soft btn-block photo-label">
-      📷 {label}
+      <Icon name="camera" size={20} /> {label}
       <input
         type="file"
         accept="image/*"

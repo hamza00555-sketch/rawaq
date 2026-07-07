@@ -2,6 +2,7 @@ import { useState } from "react";
 import { t } from "../i18n.js";
 import { TASK_LIBRARY } from "../data.js";
 import { press } from "../press.js";
+import Icon from "./Icons.jsx";
 
 // Suggested tasks for a room type: one tap adds. Already-added names are
 // hidden. A "write custom task" row expands the trilingual inputs.
@@ -42,7 +43,7 @@ export default function TaskLibraryChips({ lang, roomType, existingArNames, onPi
                 className="task-chip"
                 {...press(() => onPick(item))}
               >
-                ＋ {item[lang] || item.ar}
+                <Icon name="plus" size={16} /> {item[lang] || item.ar}
               </button>
             ))}
           </div>

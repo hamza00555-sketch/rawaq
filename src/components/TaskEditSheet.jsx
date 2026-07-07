@@ -3,6 +3,7 @@ import { t } from "../i18n.js";
 import { press } from "../press.js";
 import BottomSheet from "./BottomSheet.jsx";
 import FreqDepthPicker from "./FreqDepthPicker.jsx";
+import Icon from "./Icons.jsx";
 
 // Edit an existing room task: trilingual name + freq + depth + delete.
 export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDelete }) {
@@ -65,7 +66,7 @@ export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDel
             onClose();
           })}
         >
-          🗑 {t(lang, "deleteTask")}
+          <Icon name="trash" size={20} /> {t(lang, "deleteTask")}
         </button>
       </div>
     </BottomSheet>

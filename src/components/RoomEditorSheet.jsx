@@ -3,6 +3,7 @@ import { t } from "../i18n.js";
 import { EMOJI_PRESETS, ROOM_TYPES } from "../data.js";
 import { press } from "../press.js";
 import BottomSheet from "./BottomSheet.jsx";
+import Icon from "./Icons.jsx";
 
 const TYPE_KEY = {
   kitchen: "typeKitchen",
@@ -128,7 +129,7 @@ export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onD
               onClose();
             })}
           >
-            🗑 {confirmDelete ? t(lang, "deleteRoomConfirm") : t(lang, "deleteRoom")}
+            <Icon name="trash" size={20} /> {confirmDelete ? t(lang, "deleteRoomConfirm") : t(lang, "deleteRoom")}
           </button>
         )}
       </div>
