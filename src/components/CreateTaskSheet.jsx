@@ -3,36 +3,33 @@ import { t } from "../i18n.js";
 import { press } from "../press.js";
 import BottomSheet from "./BottomSheet.jsx";
 import TaskLibraryChips from "./TaskLibraryChips.jsx";
+import FreqDepthPicker from "./FreqDepthPicker.jsx";
 
-// Create-task wizard: pick room → surface/deep → tap a suggested task
+// Create-task wizard: pick room → freq + depth → tap a suggested task
 // (or write a custom one). Each pick adds immediately to the room.
-export default function CreateTaskSheet({ open, onClose, lang, rooms, setRooms, defaultMode }) {
+export default function CreateTaskSheet({ open, onClose, lang, rooms, setRooms }) {
   const [roomId, setRoomId] = useState(null);
-  const [mode, setMode] = useState(defaultMode || "surface");
+  const [freq, setFreq] = useState("weekly");
+  const [depth, setDepth] = useState("surface");
   const [addedMsg, setAddedMsg] = useState(false);
 
   const room = rooms.find((x) => x.id === roomId);
 
   const reset = () => {
     setRoomId(null);
-    setMode(defaultMode || "surface");
+    setFreq("weekly");
+    setDepth("surface");
   };
 
   const addTask = (name) => {
     if (!room) return;
-    const task = { id: `${room.id}-${Date.now().toString(36)}`, name, done: false };
-    setRooms(
-      rooms.map((r) =>
-        r.id === room.id ? { ...r, tasks: { ...r.tasks, [mode]: [...r.tasks[mode], task] } } : r
-      )
-    );
+    const task = { id: `${room.id}-${Date.now().toString(36)}`, name, freq, depth };
+    setRooms(rooms.map((r) => (r.id === room.id ? { ...r, tasks: [...r.tasks, task] } : r)));
     setAddedMsg(true);
     setTimeout(() => setAddedMsg(false), 1400);
   };
 
-  const existingNames = room
-    ? new Set([...room.tasks.surface, ...room.tasks.deep].map((x) => x.name.ar.trim()))
-    : new Set();
+  const existingNames = room ? new Set(room.tasks.map((x) => x.name.ar.trim())) : new Set();
 
   return (
     <BottomSheet
@@ -62,27 +59,7 @@ export default function CreateTaskSheet({ open, onClose, lang, rooms, setRooms, 
 
         {room && (
           <>
-            <span className="muted">{t(lang, "cleaningType")}</span>
-            <div className="seg" role="tablist" aria-label={t(lang, "cleaningType")}>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mode === "surface"}
-                className={`seg-btn ${mode === "surface" ? "active" : ""}`}
-                {...press(() => setMode("surface"))}
-              >
-                {t(lang, "surface")}
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mode === "deep"}
-                className={`seg-btn ${mode === "deep" ? "active" : ""}`}
-                {...press(() => setMode("deep"))}
-              >
-                {t(lang, "deep")}
-              </button>
-            </div>
+            <FreqDepthPicker lang={lang} freq={freq} setFreq={setFreq} depth={depth} setDepth={setDepth} />
 
             {addedMsg && (
               <p className="congrats" role="status" style={{ textAlign: "center" }}>

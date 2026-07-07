@@ -5,24 +5,38 @@ import PhotoUploader from "../components/PhotoUploader.jsx";
 import BottomSheet from "../components/BottomSheet.jsx";
 import DraggableTaskList from "../components/DraggableTaskList.jsx";
 import TaskLibraryChips from "../components/TaskLibraryChips.jsx";
+import FreqDepthPicker from "../components/FreqDepthPicker.jsx";
+import TaskEditSheet from "../components/TaskEditSheet.jsx";
 import RoomEditorSheet from "../components/RoomEditorSheet.jsx";
 import Snackbar from "../components/Snackbar.jsx";
 
+const badge = (lang, task) => (
+  <>
+    {task.name[lang] || task.name.ar}
+    <span className={`task-badge ${task.freq === "monthly" ? "badge-monthly" : ""}`}>
+      {t(lang, task.freq === "monthly" ? "monthly" : "weekly")}
+    </span>
+    {task.depth === "deep" && <span className="task-badge badge-deep">{t(lang, "deep")}</span>}
+  </>
+);
+
 function RoomDetail({ lang, room, updateRoom, onEditRoom, onBack }) {
-  const [tab, setTab] = useState("surface");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [addFreq, setAddFreq] = useState("weekly");
+  const [addDepth, setAddDepth] = useState("surface");
+  const [editTask, setEditTask] = useState(null);
   const [snack, setSnack] = useState(null);
 
-  const tasks = room.tasks[tab];
-  const setTasks = (next) => updateRoom({ ...room, tasks: { ...room.tasks, [tab]: next } });
+  const tasks = room.tasks;
+  const setTasks = (next) => updateRoom({ ...room, tasks: next });
 
-  const existingNames = new Set(
-    [...room.tasks.surface, ...room.tasks.deep].map((x) => x.name.ar.trim())
-  );
+  const existingNames = new Set(tasks.map((x) => x.name.ar.trim()));
 
   const addTask = (name) => {
-    const task = { id: `${room.id}-${Date.now().toString(36)}`, name, done: false };
-    setTasks([...tasks, task]);
+    setTasks([
+      ...tasks,
+      { id: `${room.id}-${Date.now().toString(36)}`, name, freq: addFreq, depth: addDepth },
+    ]);
   };
 
   const deleteTask = (task) => {
@@ -32,7 +46,7 @@ function RoomDetail({ lang, room, updateRoom, onEditRoom, onBack }) {
       message: t(lang, "taskDeleted"),
       undoLabel: t(lang, "undo"),
       onUndo: () => {
-        const current = room.tasks[tab].filter((x) => x.id !== task.id);
+        const current = room.tasks.filter((x) => x.id !== task.id);
         setTasks([...current.slice(0, index), task, ...current.slice(index)]);
       },
     });
@@ -69,39 +83,18 @@ function RoomDetail({ lang, room, updateRoom, onEditRoom, onBack }) {
         />
       </div>
 
-      <div className="seg" style={{ marginTop: 18 }} role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "surface"}
-          className={`seg-btn ${tab === "surface" ? "active" : ""}`}
-          {...press(() => setTab("surface"))}
-        >
-          {t(lang, "surface")}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "deep"}
-          className={`seg-btn ${tab === "deep" ? "active" : ""}`}
-          {...press(() => setTab("deep"))}
-        >
-          {t(lang, "deep")}
-        </button>
-      </div>
-
-      <div style={{ marginTop: 14 }}>
+      <div style={{ marginTop: 18 }}>
         {tasks.length === 0 ? (
           <div className="card center-text muted">{t(lang, "noTasks")}</div>
         ) : (
           <DraggableTaskList
             tasks={tasks}
-            renderName={(task) => task.name[lang] || task.name.ar}
-            onToggle={(task) =>
-              setTasks(tasks.map((x) => (x.id === task.id ? { ...x, done: !x.done } : x)))
-            }
+            renderName={(task) => badge(lang, task)}
+            onToggle={(task) => setEditTask(task)}
             onReorder={setTasks}
             onSwipeDelete={deleteTask}
+            rowRole="button"
+            showCheck={false}
           />
         )}
       </div>
@@ -111,14 +104,26 @@ function RoomDetail({ lang, room, updateRoom, onEditRoom, onBack }) {
       </button>
 
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={t(lang, "addTask")}>
-        <TaskLibraryChips
-          lang={lang}
-          roomType={room.type}
-          existingArNames={existingNames}
-          onPick={addTask}
-          onCustom={addTask}
-        />
+        <div className="stack">
+          <FreqDepthPicker lang={lang} freq={addFreq} setFreq={setAddFreq} depth={addDepth} setDepth={setAddDepth} />
+          <TaskLibraryChips
+            lang={lang}
+            roomType={room.type}
+            existingArNames={existingNames}
+            onPick={addTask}
+            onCustom={addTask}
+          />
+        </div>
       </BottomSheet>
+
+      <TaskEditSheet
+        open={!!editTask}
+        onClose={() => setEditTask(null)}
+        lang={lang}
+        task={editTask}
+        onSave={(next) => setTasks(tasks.map((x) => (x.id === next.id ? next : x)))}
+        onDelete={deleteTask}
+      />
 
       <Snackbar snack={snack} onDismiss={() => setSnack(null)} />
     </div>
@@ -140,12 +145,7 @@ export default function RoomsScreen({ lang, rooms, setRooms }) {
     } else {
       setRooms([
         ...rooms,
-        {
-          id: `room-${Date.now().toString(36)}`,
-          ...patch,
-          photo: null,
-          tasks: { surface: [], deep: [] },
-        },
+        { id: `room-${Date.now().toString(36)}`, ...patch, photo: null, tasks: [] },
       ]);
     }
   };
@@ -211,7 +211,7 @@ export default function RoomsScreen({ lang, rooms, setRooms }) {
             <div className="room-card-body">
               <h3>{room.name[lang] || room.name.ar}</h3>
               <p className="muted" style={{ fontSize: 14 }}>
-                {room.tasks.surface.length + room.tasks.deep.length} {t(lang, "tasks")}
+                {room.tasks.length} {t(lang, "tasks")}
               </p>
             </div>
           </button>

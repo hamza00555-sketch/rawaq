@@ -1,12 +1,11 @@
-import { t } from "../i18n.js";
 import { press } from "../press.js";
 
-// Soft nudge when today's tasks changed after the last share.
-export default function ReshareBanner({ lang, onShare }) {
+// One soft banner at a time: visit-today > visit-tomorrow > tasks-changed.
+export default function ReshareBanner({ icon, message, onShare }) {
   return (
     <button type="button" className="reshare-banner" {...press(onShare)}>
-      <span aria-hidden="true">🔄</span>
-      <span>{t(lang, "tasksChanged")}</span>
+      <span aria-hidden="true">{icon}</span>
+      <span>{message}</span>
     </button>
   );
 }

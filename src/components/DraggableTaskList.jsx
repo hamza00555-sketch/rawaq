@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 //   horizontal-first move (≥14px)  → swipe-to-delete (both directions, RTL)
 //   none of the above on release   → tap toggle
 // Keyboard: Enter/Space toggles, Delete removes.
-export default function DraggableTaskList({ tasks, renderName, onToggle, onReorder, onSwipeDelete }) {
+export default function DraggableTaskList({ tasks, renderName, onToggle, onReorder, onSwipeDelete, rowRole = "checkbox", showCheck = true }) {
   const [dragId, setDragId] = useState(null);
   const [swipe, setSwipe] = useState(null); // {id, dx}
   const timer = useRef(null);
@@ -124,8 +124,8 @@ export default function DraggableTaskList({ tasks, renderName, onToggle, onReord
             }
           }}
           tabIndex={0}
-          role="checkbox"
-          aria-checked={task.done}
+          role={rowRole}
+          aria-checked={rowRole === "checkbox" ? !!task.done : undefined}
         >
           {onSwipeDelete && (
             <span className="swipe-bg" aria-hidden="true">
@@ -140,7 +140,7 @@ export default function DraggableTaskList({ tasks, renderName, onToggle, onReord
               transition: swipe?.id === task.id ? "none" : undefined,
             }}
           >
-            <span className="task-check" aria-hidden="true">✓</span>
+            {showCheck && <span className="task-check" aria-hidden="true">✓</span>}
             <span className="task-name">{renderName(task)}</span>
           </span>
         </li>

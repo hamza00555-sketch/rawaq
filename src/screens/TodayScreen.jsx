@@ -21,11 +21,6 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
       tasks: today.tasks.map((x) => (x.id === task.id ? { ...x, done: !x.done } : x)),
     });
 
-  // Mode switch keeps skipped/extras — the rooms-sync effect rebuilds tasks.
-  const setMode = (mode) => {
-    if (mode !== today.mode) setToday({ ...today, mode });
-  };
-
   // Removing from today only: extras are dropped, room tasks are skipped.
   // Atomic update (skipped + tasks together) so the sync effect stays stable.
   const removeFromToday = (task) => {
@@ -45,7 +40,7 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
           ...prev,
           skipped: prev.skipped.filter((id) => id !== task.id),
           extras: isExtra
-            ? [...prev.extras, { id: task.id, roomId: task.roomId, name: task.name }]
+            ? [...prev.extras, { id: task.id, roomId: task.roomId, name: task.name, freq: task.freq, depth: task.depth }]
             : prev.extras,
           tasks: [...prev.tasks.slice(0, index), task, ...prev.tasks.slice(index)],
         })),
@@ -78,28 +73,7 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
         <span className="muted">{formatDate(lang, today.date)}</span>
       </header>
 
-      <div className="seg" role="tablist" aria-label={t(lang, "cleaningType")}>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={today.mode === "surface"}
-          className={`seg-btn ${today.mode === "surface" ? "active" : ""}`}
-          {...press(() => setMode("surface"))}
-        >
-          {t(lang, "surface")}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={today.mode === "deep"}
-          className={`seg-btn ${today.mode === "deep" ? "active" : ""}`}
-          {...press(() => setMode("deep"))}
-        >
-          {t(lang, "deep")}
-        </button>
-      </div>
-
-      <p className="muted" style={{ margin: "14px 0 10px" }}>
+      <p className="muted" style={{ margin: "4px 0 10px" }}>
         {done} {t(lang, "outOf")} {total} {t(lang, "tasksDone")}
       </p>
 
@@ -109,7 +83,17 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
         ) : (
           <DraggableTaskList
             tasks={today.tasks}
-            renderName={(task) => task.name[lang] || task.name.ar}
+            renderName={(task) => (
+              <>
+                {task.name[lang] || task.name.ar}
+                {task.freq === "monthly" && (
+                  <span className="task-badge badge-monthly">{t(lang, "monthly")}</span>
+                )}
+                {task.depth === "deep" && (
+                  <span className="task-badge badge-deep">{t(lang, "deep")}</span>
+                )}
+              </>
+            )}
             onToggle={toggle}
             onReorder={(tasks) => setToday({ ...today, tasks })}
             onSwipeDelete={removeFromToday}

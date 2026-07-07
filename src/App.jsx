@@ -3,8 +3,10 @@ import { LANGS, t } from "./i18n.js";
 import {
   DEFAULT_ROOMS,
   STORAGE_KEYS,
+  addDays,
   buildToday,
   migrateRooms,
+  nextVisitDate,
   taskFingerprint,
   todayStr,
 } from "./data.js";
@@ -47,6 +49,8 @@ function MainApp() {
   const [today, setToday] = useStoredState(STORAGE_KEYS.today, null);
   const [history, setHistory] = useStoredState(STORAGE_KEYS.history, []);
   const [lastShare, setLastShare] = useStoredState(STORAGE_KEYS.lastShare, null);
+  const [taskLog, setTaskLog] = useStoredState(STORAGE_KEYS.taskLog, {});
+  const [contract, setContract] = useStoredState(STORAGE_KEYS.contract, null);
 
   const [tab, setTab] = useState("home");
   const [splash, setSplash] = useState(true);
@@ -69,20 +73,24 @@ function MainApp() {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  // Keep today's list in sync with the date, mode and rooms (skipped ids
-  // and mom's extras carry over via buildToday).
+  // Keep today's list in sync with the date, the rooms and the completion
+  // log (due engine). skipped ids and mom's extras carry over via buildToday.
   useEffect(() => {
-    const mode = today?.mode || "surface";
-    const fresh = buildToday(rooms, mode, today?.date === todayStr() ? today : null);
+    const fresh = buildToday(rooms, taskLog, today?.date === todayStr() ? today : null);
     const sameIds =
       today &&
       today.date === todayStr() &&
       Array.isArray(today.skipped) &&
       Array.isArray(today.extras) &&
       today.tasks.length === fresh.tasks.length &&
-      today.tasks.every((x, i) => x.id === fresh.tasks[i].id && x.done === fresh.tasks[i].done);
+      today.tasks.every(
+        (x, i) =>
+          x.id === fresh.tasks[i].id &&
+          x.done === fresh.tasks[i].done &&
+          x.depth === fresh.tasks[i].depth
+      );
     if (!sameIds) setToday(fresh);
-  }, [rooms, today, setToday]);
+  }, [rooms, taskLog, today, setToday]);
 
   // Live sync: worker's checkmarks flow into today via the share doc.
   useShareSync(lastShare, setToday);
@@ -90,16 +98,21 @@ function MainApp() {
   const finishVisit = () => {
     if (!today) return;
     const total = today.tasks.length;
-    const done = today.tasks.filter((x) => x.done).length;
+    const doneTasks = today.tasks.filter((x) => x.done);
+    // Log completions first — the due engine hides them until next period.
+    // React 18 batches all three sets into one sync-effect pass.
+    setTaskLog({
+      ...taskLog,
+      ...Object.fromEntries(doneTasks.map((x) => [x.id, today.date])),
+    });
     setHistory([
       ...history,
       {
         id: Date.now().toString(36),
         date: today.date,
-        mode: today.mode,
-        done,
+        done: doneTasks.length,
         total,
-        percent: total ? Math.round((done / total) * 100) : 0,
+        percent: total ? Math.round((doneTasks.length / total) * 100) : 0,
       },
     ]);
     setToday({ ...today, tasks: today.tasks.map((x) => ({ ...x, done: false })) });
@@ -127,12 +140,21 @@ function MainApp() {
     );
   }
 
-  const safeToday = today || { date: todayStr(), mode: "surface", skipped: [], extras: [], tasks: [] };
+  const safeToday = today || { date: todayStr(), skipped: [], extras: [], tasks: [] };
 
   const needsReshare =
-    lastShare?.date === todayStr() &&
-    lastShare.mode === safeToday.mode &&
-    taskFingerprint(safeToday.tasks) !== lastShare.fingerprint;
+    lastShare?.date === todayStr() && taskFingerprint(safeToday.tasks) !== lastShare.fingerprint;
+
+  // One banner at a time: visit today (not shared) > visit tomorrow > tasks changed
+  const nextVisit = nextVisitDate(contract);
+  const banner =
+    nextVisit === todayStr() && lastShare?.date !== todayStr()
+      ? { icon: "🧹", message: t(lang, "visitTodayBanner") }
+      : nextVisit === addDays(todayStr(), 1)
+        ? { icon: "🌿", message: t(lang, "visitTomorrowBanner") }
+        : needsReshare
+          ? { icon: "🔄", message: t(lang, "tasksChanged") }
+          : null;
 
   const showShareUi = tab === "home" || tab === "today";
 
@@ -146,6 +168,8 @@ function MainApp() {
           rooms={rooms}
           setRooms={setRooms}
           history={history}
+          onShare={() => setShareOpen(true)}
+          nextVisit={nextVisit}
         />
       )}
       {tab === "today" && (
@@ -167,11 +191,13 @@ function MainApp() {
           owner={owner}
           setOwner={setOwner}
           history={history}
+          contract={contract}
+          setContract={setContract}
         />
       )}
 
-      {showShareUi && needsReshare && (
-        <ReshareBanner lang={lang} onShare={() => setShareOpen(true)} />
+      {showShareUi && banner && (
+        <ReshareBanner icon={banner.icon} message={banner.message} onShare={() => setShareOpen(true)} />
       )}
       {showShareUi && <ShareFab lang={lang} onShare={() => setShareOpen(true)} />}
 

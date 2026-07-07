@@ -6,7 +6,7 @@ import ProgressRing from "../components/ProgressRing.jsx";
 import RawaqLogo from "../components/RawaqLogo.jsx";
 import CreateTaskSheet from "../components/CreateTaskSheet.jsx";
 
-export default function HomeScreen({ lang, owner, today, rooms, setRooms, history }) {
+export default function HomeScreen({ lang, owner, today, rooms, setRooms, history, onShare, nextVisit }) {
   const [createOpen, setCreateOpen] = useState(false);
 
   const total = today.tasks.length;
@@ -35,15 +35,26 @@ export default function HomeScreen({ lang, owner, today, rooms, setRooms, histor
         <p className="muted">
           {done} {t(lang, "outOf")} {total} {t(lang, "tasksDone")}
         </p>
-        <span className="muted" style={{ fontSize: 14 }}>
-          {today.mode === "surface" ? t(lang, "surfaceClean") : t(lang, "deepClean")}
-        </span>
+        {nextVisit && (
+          <span className="muted" style={{ fontSize: 14 }}>
+            🗓️ {t(lang, "nextVisit")}: {formatDate(lang, nextVisit)}
+          </span>
+        )}
         {complete && (
           <p className="congrats" role="status">
             {t(lang, "congrats100")}
           </p>
         )}
       </section>
+
+      <div className="stack" style={{ marginTop: 20 }}>
+        <button type="button" className="btn btn-primary btn-block btn-hero" {...press(onShare)}>
+          📤 {t(lang, "shareHero")}
+        </button>
+        <button type="button" className="btn btn-soft btn-block" style={{ minHeight: 54 }} {...press(() => setCreateOpen(true))}>
+          ＋ {t(lang, "createTask")}
+        </button>
+      </div>
 
       {lastVisit && (
         <div className="card" style={{ marginTop: 14 }}>
@@ -60,19 +71,12 @@ export default function HomeScreen({ lang, owner, today, rooms, setRooms, histor
         </div>
       )}
 
-      <div className="stack" style={{ marginTop: 20 }}>
-        <button type="button" className="btn btn-primary btn-block btn-hero" {...press(() => setCreateOpen(true))}>
-          ＋ {t(lang, "createTask")}
-        </button>
-      </div>
-
       <CreateTaskSheet
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         lang={lang}
         rooms={rooms}
         setRooms={setRooms}
-        defaultMode={today.mode}
       />
     </div>
   );

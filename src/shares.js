@@ -79,11 +79,10 @@ const devStore = {
 
 const shareLink = (id) => `${window.location.origin}${window.location.pathname}#w=${id}`;
 
-export async function createShare({ tasks, date, mode, owner, rooms }) {
+export async function createShare({ tasks, date, owner, rooms }) {
   const data = {
     tasks,
     date,
-    mode,
     owner: owner || "",
     rooms: rooms || {},
     createdAt: Date.now(),

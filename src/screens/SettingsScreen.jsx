@@ -1,9 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { LANGS, t } from "../i18n.js";
-import { formatDate } from "../data.js";
+import { contractEnd, formatDate, isContractExpired, nextVisitDate, remainingVisits, todayStr } from "../data.js";
 import { press } from "../press.js";
 
-export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history }) {
+// 2023-01-01 was a Sunday — reference week for localized weekday names.
+const weekdayName = (lang, day) => {
+  const locale = lang === "ar" ? "ar" : lang === "fil" ? "fil" : "en";
+  try {
+    return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(new Date(2023, 0, 1 + day));
+  } catch {
+    return String(day);
+  }
+};
+
+export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history, contract, setContract }) {
   const [nameDraft, setNameDraft] = useState(owner);
   const [savedMsg, setSavedMsg] = useState(false);
   const firstRender = useRef(true);
@@ -86,6 +96,91 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
         )}
       </div>
 
+      <h2 className="section-title">{t(lang, "workerSchedule")}</h2>
+      <div className="card stack">
+        <span className="muted">{t(lang, "visitDays")}</span>
+        <div className="chip-wrap">
+          {[0, 1, 2, 3, 4, 5, 6].map((day) => {
+            const active = (contract?.visitDays || []).includes(day);
+            return (
+              <button
+                key={day}
+                type="button"
+                className={`task-chip ${active ? "selected" : ""}`}
+                aria-pressed={active}
+                {...press(() => {
+                  const days = contract?.visitDays || [];
+                  setContract({
+                    startDate: todayStr(),
+                    months: 3,
+                    ...contract,
+                    visitDays: active ? days.filter((x) => x !== day) : [...days, day].sort(),
+                  });
+                })}
+              >
+                {weekdayName(lang, day)}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="setting-row">
+          <span>{t(lang, "contractStart")}</span>
+          <input
+            type="date"
+            className="input"
+            style={{ maxWidth: 180 }}
+            value={contract?.startDate || ""}
+            onChange={(e) =>
+              setContract({ visitDays: [], months: 3, ...contract, startDate: e.target.value })
+            }
+            aria-label={t(lang, "contractStart")}
+          />
+        </div>
+
+        <div className="setting-row">
+          <span>{t(lang, "contractMonths")}</span>
+          <select
+            className="input"
+            style={{ maxWidth: 120 }}
+            value={contract?.months || 3}
+            onChange={(e) =>
+              setContract({ visitDays: [], startDate: todayStr(), ...contract, months: Number(e.target.value) })
+            }
+            aria-label={t(lang, "contractMonths")}
+          >
+            {[1, 2, 3, 6, 12].map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </div>
+
+        {contract?.visitDays?.length > 0 && contract?.startDate && (
+          isContractExpired(contract) ? (
+            <p className="muted" role="status" style={{ color: "var(--danger)" }}>
+              {t(lang, "contractExpired")}
+            </p>
+          ) : (
+            <div className="stack" style={{ gap: 6 }}>
+              <div className="row spread">
+                <span className="muted">{t(lang, "contractEndLabel")}</span>
+                <strong>{formatDate(lang, contractEnd(contract))}</strong>
+              </div>
+              {nextVisitDate(contract) && (
+                <div className="row spread">
+                  <span className="muted">{t(lang, "nextVisit")}</span>
+                  <strong>{formatDate(lang, nextVisitDate(contract))}</strong>
+                </div>
+              )}
+              <div className="row spread">
+                <span className="muted">{t(lang, "remainingVisitsLabel")}</span>
+                <strong>{remainingVisits(contract)}</strong>
+              </div>
+            </div>
+          )
+        )}
+      </div>
+
       <h2 className="section-title">{t(lang, "history")}</h2>
       {history.length === 0 ? (
         <div className="card center-text muted">{t(lang, "noHistory")}</div>
@@ -102,16 +197,18 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
               <div className="progress-bar">
                 <div style={{ width: `${visit.percent}%` }} />
               </div>
-              <span className="muted" style={{ fontSize: 14 }}>
-                {visit.mode === "surface" ? t(lang, "surfaceClean") : t(lang, "deepClean")}
-              </span>
+              {visit.mode && (
+                <span className="muted" style={{ fontSize: 14 }}>
+                  {visit.mode === "surface" ? t(lang, "surfaceClean") : t(lang, "deepClean")}
+                </span>
+              )}
             </div>
           ))}
         </div>
       )}
 
       <p className="muted center-text" style={{ marginTop: 26, fontSize: 13 }}>
-        {t(lang, "appName")} · {t(lang, "version")} 4.0
+        {t(lang, "appName")} · {t(lang, "version")} 4.1
       </p>
     </div>
   );

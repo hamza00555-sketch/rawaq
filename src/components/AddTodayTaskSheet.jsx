@@ -3,17 +3,21 @@ import { t } from "../i18n.js";
 import { press } from "../press.js";
 import BottomSheet from "./BottomSheet.jsx";
 import TaskLibraryChips from "./TaskLibraryChips.jsx";
+import FreqDepthPicker from "./FreqDepthPicker.jsx";
 
 // Add an ad-hoc task to today's list only (an "extra"): pick room →
-// library chips for its type → or write a custom one.
+// library chips for its type → or write a custom one. freq/depth are
+// badges only — extras never enter the recurrence log.
 export default function AddTodayTaskSheet({ open, onClose, lang, rooms, today, onAdd }) {
   const [roomId, setRoomId] = useState(null);
+  const [freq, setFreq] = useState("weekly");
+  const [depth, setDepth] = useState("surface");
   const room = rooms.find((x) => x.id === roomId);
 
   const existingNames = new Set(today.tasks.map((x) => x.name.ar));
 
   const add = (name) => {
-    onAdd({ id: `x-${Date.now().toString(36)}`, roomId: roomId || null, name });
+    onAdd({ id: `x-${Date.now().toString(36)}`, roomId: roomId || null, name, freq, depth });
     setRoomId(null);
     onClose();
   };
@@ -45,13 +49,16 @@ export default function AddTodayTaskSheet({ open, onClose, lang, rooms, today, o
         </div>
 
         {room && (
-          <TaskLibraryChips
-            lang={lang}
-            roomType={room.type}
-            existingArNames={existingNames}
-            onPick={add}
-            onCustom={add}
-          />
+          <>
+            <FreqDepthPicker lang={lang} freq={freq} setFreq={setFreq} depth={depth} setDepth={setDepth} />
+            <TaskLibraryChips
+              lang={lang}
+              roomType={room.type}
+              existingArNames={existingNames}
+              onPick={add}
+              onCustom={add}
+            />
+          </>
         )}
       </div>
     </BottomSheet>

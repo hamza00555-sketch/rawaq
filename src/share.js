@@ -1,10 +1,5 @@
-// Worker link: tasks encoded as Unicode-safe base64 in the URL hash.
-// The Firebase phase replaces this with a short link (/w/ABC123).
-
-export const encodeWorkerLink = (payload) => {
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-  return `${window.location.origin}${window.location.pathname}#worker=${encoded}`;
-};
+// Legacy long links (#worker=<base64>) are no longer generated — short
+// Firestore links replaced them — but old links must keep opening.
 
 export const decodeWorkerHash = (hash) => {
   if (!hash || !hash.startsWith("#worker=")) return null;
