@@ -1,11 +1,11 @@
-export default function ProgressRing({ percent, size = 170, label }) {
+export default function ProgressRing({ percent, size = 170, label, celebrate }) {
   const stroke = 13;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c * (1 - percent / 100);
 
   return (
-    <div style={{ position: "relative", width: size, height: size }}>
+    <div className={celebrate ? "ring-celebrate" : ""} style={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} role="img" aria-label={`${label ?? ""} ${percent}%`}>
         <circle
           cx={size / 2}

@@ -4,34 +4,38 @@ import { press } from "../press.js";
 import PhotoUploader from "../components/PhotoUploader.jsx";
 import BottomSheet from "../components/BottomSheet.jsx";
 import DraggableTaskList from "../components/DraggableTaskList.jsx";
+import TaskLibraryChips from "../components/TaskLibraryChips.jsx";
+import RoomEditorSheet from "../components/RoomEditorSheet.jsx";
+import Snackbar from "../components/Snackbar.jsx";
 
-function RoomDetail({ lang, room, updateRoom, onBack }) {
+function RoomDetail({ lang, room, updateRoom, onEditRoom, onBack }) {
   const [tab, setTab] = useState("surface");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [nameAr, setNameAr] = useState("");
-  const [nameEn, setNameEn] = useState("");
-  const [nameFil, setNameFil] = useState("");
+  const [snack, setSnack] = useState(null);
 
   const tasks = room.tasks[tab];
+  const setTasks = (next) => updateRoom({ ...room, tasks: { ...room.tasks, [tab]: next } });
 
-  const setTasks = (next) =>
-    updateRoom({ ...room, tasks: { ...room.tasks, [tab]: next } });
+  const existingNames = new Set(
+    [...room.tasks.surface, ...room.tasks.deep].map((x) => x.name.ar.trim())
+  );
 
-  const addTask = () => {
-    if (!nameAr.trim()) return;
-    const id = `${room.id}-${Date.now().toString(36)}`;
-    setTasks([
-      ...tasks,
-      {
-        id,
-        name: { ar: nameAr.trim(), en: nameEn.trim() || nameAr.trim(), fil: nameFil.trim() || nameAr.trim() },
-        done: false,
+  const addTask = (name) => {
+    const task = { id: `${room.id}-${Date.now().toString(36)}`, name, done: false };
+    setTasks([...tasks, task]);
+  };
+
+  const deleteTask = (task) => {
+    const index = tasks.findIndex((x) => x.id === task.id);
+    setTasks(tasks.filter((x) => x.id !== task.id));
+    setSnack({
+      message: t(lang, "taskDeleted"),
+      undoLabel: t(lang, "undo"),
+      onUndo: () => {
+        const current = room.tasks[tab].filter((x) => x.id !== task.id);
+        setTasks([...current.slice(0, index), task, ...current.slice(index)]);
       },
-    ]);
-    setNameAr("");
-    setNameEn("");
-    setNameFil("");
-    setSheetOpen(false);
+    });
   };
 
   return (
@@ -45,6 +49,9 @@ function RoomDetail({ lang, room, updateRoom, onBack }) {
             {room.emoji} {room.name[lang] || room.name.ar}
           </h1>
         </div>
+        <button type="button" className="icon-btn" aria-label={t(lang, "editRoom")} {...press(onEditRoom)}>
+          ✎
+        </button>
       </header>
 
       {room.photo ? (
@@ -94,7 +101,7 @@ function RoomDetail({ lang, room, updateRoom, onBack }) {
               setTasks(tasks.map((x) => (x.id === task.id ? { ...x, done: !x.done } : x)))
             }
             onReorder={setTasks}
-            onDelete={(task) => setTasks(tasks.filter((x) => x.id !== task.id))}
+            onSwipeDelete={deleteTask}
           />
         )}
       </div>
@@ -104,49 +111,85 @@ function RoomDetail({ lang, room, updateRoom, onBack }) {
       </button>
 
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={t(lang, "addTask")}>
-        <div className="stack">
-          <input
-            className="input"
-            dir="rtl"
-            value={nameAr}
-            onChange={(e) => setNameAr(e.target.value)}
-            placeholder={t(lang, "taskNameAr")}
-          />
-          <input
-            className="input"
-            dir="ltr"
-            value={nameEn}
-            onChange={(e) => setNameEn(e.target.value)}
-            placeholder={t(lang, "taskNameEn")}
-          />
-          <input
-            className="input"
-            dir="ltr"
-            value={nameFil}
-            onChange={(e) => setNameFil(e.target.value)}
-            placeholder={t(lang, "taskNameFil")}
-          />
-          <button type="button" className="btn btn-primary btn-block" {...press(addTask)}>
-            {t(lang, "add")}
-          </button>
-        </div>
+        <TaskLibraryChips
+          lang={lang}
+          roomType={room.type}
+          existingArNames={existingNames}
+          onPick={addTask}
+          onCustom={addTask}
+        />
       </BottomSheet>
+
+      <Snackbar snack={snack} onDismiss={() => setSnack(null)} />
     </div>
   );
 }
 
 export default function RoomsScreen({ lang, rooms, setRooms }) {
   const [openRoomId, setOpenRoomId] = useState(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorRoomId, setEditorRoomId] = useState(null); // null = add mode
+  const [snack, setSnack] = useState(null);
+
   const openRoom = rooms.find((x) => x.id === openRoomId);
+  const editorRoom = rooms.find((x) => x.id === editorRoomId);
+
+  const saveRoom = (patch) => {
+    if (editorRoom) {
+      setRooms(rooms.map((r) => (r.id === editorRoom.id ? { ...r, ...patch } : r)));
+    } else {
+      setRooms([
+        ...rooms,
+        {
+          id: `room-${Date.now().toString(36)}`,
+          ...patch,
+          photo: null,
+          tasks: { surface: [], deep: [] },
+        },
+      ]);
+    }
+  };
+
+  const deleteRoom = () => {
+    if (!editorRoom) return;
+    const index = rooms.findIndex((r) => r.id === editorRoom.id);
+    const removed = editorRoom;
+    setRooms(rooms.filter((r) => r.id !== removed.id));
+    setOpenRoomId(null);
+    setSnack({
+      message: t(lang, "roomDeleted"),
+      undoLabel: t(lang, "undo"),
+      onUndo: () =>
+        setRooms((prev) => {
+          const next = prev.filter((r) => r.id !== removed.id);
+          return [...next.slice(0, index), removed, ...next.slice(index)];
+        }),
+    });
+  };
 
   if (openRoom) {
     return (
-      <RoomDetail
-        lang={lang}
-        room={openRoom}
-        updateRoom={(next) => setRooms(rooms.map((x) => (x.id === next.id ? next : x)))}
-        onBack={() => setOpenRoomId(null)}
-      />
+      <>
+        <RoomDetail
+          lang={lang}
+          room={openRoom}
+          updateRoom={(next) => setRooms(rooms.map((x) => (x.id === next.id ? next : x)))}
+          onEditRoom={() => {
+            setEditorRoomId(openRoom.id);
+            setEditorOpen(true);
+          }}
+          onBack={() => setOpenRoomId(null)}
+        />
+        <RoomEditorSheet
+          open={editorOpen}
+          onClose={() => setEditorOpen(false)}
+          lang={lang}
+          room={editorRoom}
+          onSave={saveRoom}
+          onDelete={deleteRoom}
+        />
+        <Snackbar snack={snack} onDismiss={() => setSnack(null)} />
+      </>
     );
   }
 
@@ -173,7 +216,28 @@ export default function RoomsScreen({ lang, rooms, setRooms }) {
             </div>
           </button>
         ))}
+        <button
+          type="button"
+          className="room-card add-room-card"
+          {...press(() => {
+            setEditorRoomId(null);
+            setEditorOpen(true);
+          })}
+        >
+          <span style={{ fontSize: 34 }} aria-hidden="true">＋</span>
+          <span style={{ fontWeight: 600 }}>{t(lang, "addRoom")}</span>
+        </button>
       </div>
+
+      <RoomEditorSheet
+        open={editorOpen}
+        onClose={() => setEditorOpen(false)}
+        lang={lang}
+        room={editorRoom}
+        onSave={saveRoom}
+        onDelete={editorRoom ? deleteRoom : undefined}
+      />
+      <Snackbar snack={snack} onDismiss={() => setSnack(null)} />
     </div>
   );
 }

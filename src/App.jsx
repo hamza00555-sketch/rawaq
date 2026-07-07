@@ -1,21 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
 import { LANGS, t } from "./i18n.js";
-import { DEFAULT_PIN, DEFAULT_ROOMS, STORAGE_KEYS, buildToday, todayStr } from "./data.js";
+import {
+  DEFAULT_ROOMS,
+  STORAGE_KEYS,
+  buildToday,
+  migrateRooms,
+  taskFingerprint,
+  todayStr,
+} from "./data.js";
 import { useStoredState } from "./storage.js";
 import { decodeWorkerHash } from "./share.js";
 import { parseShortHash } from "./shares.js";
+import { useShareSync } from "./useShareSync.js";
 
 import SplashScreen from "./screens/SplashScreen.jsx";
+import WelcomeScreen from "./screens/WelcomeScreen.jsx";
 import HomeScreen from "./screens/HomeScreen.jsx";
 import TodayScreen from "./screens/TodayScreen.jsx";
 import RoomsScreen from "./screens/RoomsScreen.jsx";
-import HistoryScreen from "./screens/HistoryScreen.jsx";
 import SettingsScreen from "./screens/SettingsScreen.jsx";
-import WorkerScreen from "./screens/WorkerScreen.jsx";
 import WorkerView from "./screens/WorkerView.jsx";
 import BottomNav from "./components/NavIcons.jsx";
 import ShareModal from "./components/ShareModal.jsx";
-import PinModal from "./components/PinModal.jsx";
+import ShareFab from "./components/ShareFab.jsx";
+import ReshareBanner from "./components/ReshareBanner.jsx";
 
 export default function App() {
   // A #w= (short) or legacy #worker= link renders the standalone worker view
@@ -27,21 +35,23 @@ export default function App() {
 }
 
 function MainApp() {
+  // Captured before useStoredState writes the key on first render.
+  const [firstRun, setFirstRun] = useState(
+    () => localStorage.getItem(STORAGE_KEYS.owner) == null
+  );
+
   const [lang, setLang] = useStoredState(STORAGE_KEYS.lang, "ar");
   const [theme, setTheme] = useStoredState(STORAGE_KEYS.theme, "light");
-  const [rooms, setRooms] = useStoredState(STORAGE_KEYS.rooms, DEFAULT_ROOMS);
-  const [pin, setPin] = useStoredState(STORAGE_KEYS.pin, DEFAULT_PIN);
+  const [rooms, setRooms] = useStoredState(STORAGE_KEYS.rooms, DEFAULT_ROOMS, migrateRooms);
   const [owner, setOwner] = useStoredState(STORAGE_KEYS.owner, "");
   const [today, setToday] = useStoredState(STORAGE_KEYS.today, null);
   const [history, setHistory] = useStoredState(STORAGE_KEYS.history, []);
+  const [lastShare, setLastShare] = useStoredState(STORAGE_KEYS.lastShare, null);
 
   const [tab, setTab] = useState("home");
   const [splash, setSplash] = useState(true);
   const [splashLeaving, setSplashLeaving] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [workerMode, setWorkerMode] = useState(false);
-  const [workerAsk, setWorkerAsk] = useState(false);
-  const [workerPinError, setWorkerPinError] = useState("");
 
   // Splash: ~1.6s then fade out
   useEffect(() => {
@@ -59,17 +69,23 @@ function MainApp() {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  // Keep today's list in sync with the date, the selected mode and the rooms
+  // Keep today's list in sync with the date, mode and rooms (skipped ids
+  // and mom's extras carry over via buildToday).
   useEffect(() => {
     const mode = today?.mode || "surface";
     const fresh = buildToday(rooms, mode, today?.date === todayStr() ? today : null);
     const sameIds =
       today &&
       today.date === todayStr() &&
+      Array.isArray(today.skipped) &&
+      Array.isArray(today.extras) &&
       today.tasks.length === fresh.tasks.length &&
       today.tasks.every((x, i) => x.id === fresh.tasks[i].id && x.done === fresh.tasks[i].done);
     if (!sameIds) setToday(fresh);
   }, [rooms, today, setToday]);
+
+  // Live sync: worker's checkmarks flow into today via the share doc.
+  useShareSync(lastShare, setToday);
 
   const finishVisit = () => {
     if (!today) return;
@@ -89,16 +105,6 @@ function MainApp() {
     setToday({ ...today, tasks: today.tasks.map((x) => ({ ...x, done: false })) });
   };
 
-  const tryEnterWorker = (value) => {
-    if (value === pin) {
-      setWorkerAsk(false);
-      setWorkerPinError("");
-      setWorkerMode(true);
-    } else {
-      setWorkerPinError(t(lang, "wrongPin"));
-    }
-  };
-
   if (splash) {
     return (
       <div className={`app rawaq-${theme}`}>
@@ -107,11 +113,28 @@ function MainApp() {
     );
   }
 
-  if (workerMode && today) {
-    return <WorkerScreen today={today} setToday={setToday} pin={pin} onExit={() => setWorkerMode(false)} />;
+  if (firstRun) {
+    return (
+      <div className={`app rawaq-${theme}`}>
+        <WelcomeScreen
+          lang={lang}
+          onDone={(name) => {
+            setOwner(name);
+            setFirstRun(false);
+          }}
+        />
+      </div>
+    );
   }
 
-  const safeToday = today || { date: todayStr(), mode: "surface", tasks: [] };
+  const safeToday = today || { date: todayStr(), mode: "surface", skipped: [], extras: [], tasks: [] };
+
+  const needsReshare =
+    lastShare?.date === todayStr() &&
+    lastShare.mode === safeToday.mode &&
+    taskFingerprint(safeToday.tasks) !== lastShare.fingerprint;
+
+  const showShareUi = tab === "home" || tab === "today";
 
   return (
     <div className={`app rawaq-${theme}`}>
@@ -122,18 +145,19 @@ function MainApp() {
           today={safeToday}
           rooms={rooms}
           setRooms={setRooms}
-          onShare={() => setShareOpen(true)}
-          onWorkerMode={() => {
-            setWorkerPinError("");
-            setWorkerAsk(true);
-          }}
+          history={history}
         />
       )}
       {tab === "today" && (
-        <TodayScreen lang={lang} today={safeToday} setToday={setToday} onFinishVisit={finishVisit} />
+        <TodayScreen
+          lang={lang}
+          today={safeToday}
+          setToday={setToday}
+          rooms={rooms}
+          onFinishVisit={finishVisit}
+        />
       )}
       {tab === "rooms" && <RoomsScreen lang={lang} rooms={rooms} setRooms={setRooms} />}
-      {tab === "history" && <HistoryScreen lang={lang} history={history} />}
       {tab === "settings" && (
         <SettingsScreen
           lang={lang}
@@ -142,10 +166,14 @@ function MainApp() {
           setTheme={setTheme}
           owner={owner}
           setOwner={setOwner}
-          pin={pin}
-          setPin={setPin}
+          history={history}
         />
       )}
+
+      {showShareUi && needsReshare && (
+        <ReshareBanner lang={lang} onShare={() => setShareOpen(true)} />
+      )}
+      {showShareUi && <ShareFab lang={lang} onShare={() => setShareOpen(true)} />}
 
       <BottomNav
         tab={tab}
@@ -154,22 +182,20 @@ function MainApp() {
           home: t(lang, "home"),
           today: t(lang, "today"),
           rooms: t(lang, "rooms"),
-          history: t(lang, "history"),
           settings: t(lang, "settings"),
         }}
       />
 
-      <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} lang={lang} today={safeToday} owner={owner} />
-
-      {workerAsk && (
-        <PinModal
-          title={t(lang, "enterPin")}
-          error={workerPinError}
-          onSubmit={tryEnterWorker}
-          onCancel={() => setWorkerAsk(false)}
-          cancelLabel={t(lang, "cancel")}
-        />
-      )}
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        lang={lang}
+        today={safeToday}
+        owner={owner}
+        rooms={rooms}
+        lastShare={lastShare}
+        onShared={setLastShare}
+      />
     </div>
   );
 }

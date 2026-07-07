@@ -1,28 +1,60 @@
 import { useEffect, useState } from "react";
 import { t } from "../i18n.js";
+import { taskFingerprint, todayStr } from "../data.js";
 import { encodeWorkerLink } from "../share.js";
-import { createShare } from "../shares.js";
+import { createShare, shareIdFromLink } from "../shares.js";
 import BottomSheet from "./BottomSheet.jsx";
 import QRCanvas from "./QRCanvas.jsx";
 
-export default function ShareModal({ open, onClose, lang, today, owner }) {
+export default function ShareModal({ open, onClose, lang, today, owner, rooms, lastShare, onShared }) {
   const [copied, setCopied] = useState(false);
   const [state, setState] = useState({ status: "loading", link: "" });
 
-  // Short link via Firestore; any failure falls back to the legacy long hash.
+  // Short link via Firestore; unchanged tasks reuse the existing link so
+  // mom's live listener and the worker stay on one doc. Any failure falls
+  // back to the legacy long hash.
   useEffect(() => {
     if (!open || !today) return;
     let cancelled = false;
-    setState({ status: "loading", link: "" });
     setCopied(false);
-    const payload = { date: today.date, mode: today.mode, owner, tasks: today.tasks };
+
+    const fingerprint = taskFingerprint(today.tasks);
+    if (
+      lastShare?.link &&
+      lastShare.date === todayStr() &&
+      lastShare.mode === today.mode &&
+      lastShare.fingerprint === fingerprint
+    ) {
+      setState({ status: "short", link: lastShare.link });
+      return;
+    }
+
+    setState({ status: "loading", link: "" });
+    const roomsMeta = Object.fromEntries(
+      rooms.map((r) => [r.id, { name: r.name, emoji: r.emoji }])
+    );
+    const payload = { date: today.date, mode: today.mode, owner, tasks: today.tasks, rooms: roomsMeta };
     createShare(payload)
-      .then((link) => !cancelled && setState({ status: "short", link }))
-      .catch(() => !cancelled && setState({ status: "fallback", link: encodeWorkerLink(payload) }));
+      .then((link) => {
+        if (cancelled) return;
+        setState({ status: "short", link });
+        onShared({
+          id: shareIdFromLink(link),
+          link,
+          date: today.date,
+          mode: today.mode,
+          fingerprint,
+          sharedAt: Date.now(),
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setState({ status: "fallback", link: encodeWorkerLink(payload) });
+      });
     return () => {
       cancelled = true;
     };
-  }, [open, today, owner]);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const ready = state.status !== "loading";
   const link = state.link;

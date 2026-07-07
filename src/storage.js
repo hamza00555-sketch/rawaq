@@ -20,8 +20,11 @@ export const save = (key, value) => {
   }
 };
 
-export function useStoredState(key, fallback) {
-  const [state, setState] = useState(() => load(key, fallback));
+export function useStoredState(key, fallback, migrate) {
+  const [state, setState] = useState(() => {
+    const value = load(key, fallback);
+    return migrate ? migrate(value) : value;
+  });
   useEffect(() => {
     save(key, state);
   }, [key, state]);

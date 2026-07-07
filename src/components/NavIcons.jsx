@@ -36,7 +36,7 @@ const icons = {
 };
 
 export default function BottomNav({ tab, setTab, labels }) {
-  const tabs = ["home", "today", "rooms", "history", "settings"];
+  const tabs = ["home", "today", "rooms", "settings"];
   return (
     <nav className="bottom-nav" aria-label="التنقل الرئيسي">
       {tabs.map((id) => (
