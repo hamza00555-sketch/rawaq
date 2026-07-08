@@ -887,8 +887,16 @@ select.input { appearance: auto; }
   animation: fade-in 0.4s ease;
 }
 
-.splash svg { animation: pop-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+.splash svg, .splash-logo { animation: pop-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+.splash-logo { border-radius: 24px; box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); }
 .splash h1 { font-size: 28px; font-weight: 700; color: var(--primary); }
+
+/* Welcome: sit content in the upper-middle, not dead-center — easier on the eye */
+.splash.welcome {
+  justify-content: flex-start;
+  padding: max(9vh, 48px) 24px 40px;
+  overflow-y: auto;
+}
 .splash p { color: var(--text-2); font-size: 15px; }
 .splash.leaving { animation: fade-out 0.35s ease forwards; }
 

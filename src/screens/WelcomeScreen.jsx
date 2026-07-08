@@ -7,11 +7,11 @@ export default function WelcomeScreen({ lang, onDone }) {
   const [name, setName] = useState("");
 
   return (
-    <div className="splash welcome" style={{ gap: 14, padding: 24 }}>
+    <div className="splash welcome" style={{ gap: 12 }}>
       <img
         src="/illustrations/welcome.webp"
         alt=""
-        style={{ width: "min(300px, 78%)", height: "auto", marginBottom: 4 }}
+        style={{ width: "min(260px, 66%)", height: "auto", marginBottom: 2 }}
       />
       <h1 style={{ fontSize: 28 }}>{t(lang, "welcomeTitle")}</h1>
       <p className="muted" style={{ fontSize: 18 }}>{t(lang, "welcomeAsk")}</p>
