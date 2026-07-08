@@ -6,7 +6,7 @@ export default function BottomSheet({ open, onClose, title, children }) {
   return (
     <div
       className="overlay"
-      onPointerDown={(e) => {
+      onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
