@@ -24,7 +24,6 @@ import SettingsScreen from "./screens/SettingsScreen.jsx";
 import WorkerView from "./screens/WorkerView.jsx";
 import BottomNav from "./components/NavIcons.jsx";
 import ShareModal from "./components/ShareModal.jsx";
-import ShareFab from "./components/ShareFab.jsx";
 import ReshareBanner from "./components/ReshareBanner.jsx";
 
 export default function App() {
@@ -44,6 +43,7 @@ function MainApp() {
 
   const [lang, setLang] = useStoredState(STORAGE_KEYS.lang, "ar");
   const [theme, setTheme] = useStoredState(STORAGE_KEYS.theme, "light");
+  const [uiSize, setUiSize] = useStoredState(STORAGE_KEYS.uiSize, "normal");
   const [rooms, setRooms] = useStoredState(STORAGE_KEYS.rooms, DEFAULT_ROOMS, migrateRooms);
   const [owner, setOwner] = useStoredState(STORAGE_KEYS.owner, "");
   const [today, setToday] = useStoredState(STORAGE_KEYS.today, null);
@@ -120,7 +120,7 @@ function MainApp() {
 
   if (splash) {
     return (
-      <div className={`app rawaq-${theme}`}>
+      <div className={`app rawaq-${theme}${uiSize === "large" ? " ui-large" : ""}`}>
         <SplashScreen lang={lang} owner={owner} leaving={splashLeaving} />
       </div>
     );
@@ -128,7 +128,7 @@ function MainApp() {
 
   if (firstRun) {
     return (
-      <div className={`app rawaq-${theme}`}>
+      <div className={`app rawaq-${theme}${uiSize === "large" ? " ui-large" : ""}`}>
         <WelcomeScreen
           lang={lang}
           onDone={(name) => {
@@ -159,7 +159,7 @@ function MainApp() {
   const showShareUi = tab === "home" || tab === "today";
 
   return (
-    <div className={`app rawaq-${theme}`}>
+    <div className={`app rawaq-${theme}${uiSize === "large" ? " ui-large" : ""}`}>
       {tab === "home" && (
         <HomeScreen
           lang={lang}
@@ -193,13 +193,14 @@ function MainApp() {
           history={history}
           contract={contract}
           setContract={setContract}
+          uiSize={uiSize}
+          setUiSize={setUiSize}
         />
       )}
 
       {showShareUi && banner && (
         <ReshareBanner icon={banner.icon} message={banner.message} onShare={() => setShareOpen(true)} />
       )}
-      {showShareUi && <ShareFab lang={lang} onShare={() => setShareOpen(true)} />}
 
       <BottomNav
         tab={tab}

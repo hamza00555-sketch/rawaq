@@ -9,9 +9,9 @@ export default function RawaqLogo({ size = 64 }) {
     <svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="شعار رواق">
       <defs>
         <linearGradient id={bg} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#FF7A59" />
-          <stop offset="0.55" stopColor="#E8543A" />
-          <stop offset="1" stopColor="#C24E2E" />
+          <stop offset="0" stopColor="#818CF8" />
+          <stop offset="0.55" stopColor="#6366F1" />
+          <stop offset="1" stopColor="#4F46E5" />
         </linearGradient>
         <linearGradient id={shine} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#FFFFFF" stopOpacity="0.35" />
@@ -27,9 +27,9 @@ export default function RawaqLogo({ size = 64 }) {
         strokeWidth="5"
         strokeLinecap="round"
       />
-      <path d="M32 52 V38" stroke="#FFE3B0" strokeWidth="4" strokeLinecap="round" />
-      <path d="M32 42 C28 40 25 36 25 31 C30 32 32 35 32 40 Z" fill="#FFE3B0" />
-      <path d="M32 40 C36 38 39 34 39 29 C34 30 32 33 32 38 Z" fill="#FFE3B0" />
+      <path d="M32 52 V38" stroke="#C7D2FE" strokeWidth="4" strokeLinecap="round" />
+      <path d="M32 42 C28 40 25 36 25 31 C30 32 32 35 32 40 Z" fill="#C7D2FE" />
+      <path d="M32 40 C36 38 39 34 39 29 C34 30 32 33 32 38 Z" fill="#C7D2FE" />
     </svg>
   );
 }

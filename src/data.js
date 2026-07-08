@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   lastShare: "rawaq_last_share",
   taskLog: "rawaq_task_log",
   contract: "rawaq_contract",
+  uiSize: "rawaq_uisize",
 };
 
 export const ROOM_TYPES = ["kitchen", "bathroom", "bedroom", "living", "general"];

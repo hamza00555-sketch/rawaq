@@ -121,6 +121,10 @@ export const T = {
     dangerZone: "منطقة الخطر",
     resetApp: "مسح كل البيانات والبدء من جديد",
     resetConfirm: "سيُمسح كل شيء نهائياً — اضغطي للتأكيد",
+    accessibility: "سهولة الوصول",
+    displaySize: "حجم الواجهة",
+    sizeNormal: "عادي",
+    sizeLarge: "كبير",
   },
   en: {
     appName: "Rawaq",
@@ -238,6 +242,10 @@ export const T = {
     dangerZone: "Danger zone",
     resetApp: "Erase all data and start over",
     resetConfirm: "Everything will be permanently erased — tap to confirm",
+    accessibility: "Accessibility",
+    displaySize: "Display size",
+    sizeNormal: "Normal",
+    sizeLarge: "Large",
   },
   fil: {
     appName: "Rawaq",
@@ -355,6 +363,10 @@ export const T = {
     dangerZone: "Danger zone",
     resetApp: "Burahin lahat ng data at magsimula muli",
     resetConfirm: "Buburahin nang permanente ang lahat — pindutin para kumpirmahin",
+    accessibility: "Accessibility",
+    displaySize: "Laki ng display",
+    sizeNormal: "Normal",
+    sizeLarge: "Malaki",
   },
 };
 

@@ -25,7 +25,7 @@ const resetAllData = () => {
   window.location.reload();
 };
 
-export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history, contract, setContract }) {
+export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history, contract, setContract, uiSize, setUiSize }) {
   const [nameDraft, setNameDraft] = useState(owner);
   const [savedMsg, setSavedMsg] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -88,6 +88,31 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
               {...press(() => setTheme("dark"))}
             >
               <Icon name="moon" size={18} /> {t(lang, "dark")}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <h2 className="section-title">{t(lang, "accessibility")}</h2>
+      <div className="card">
+        <div className="setting-row">
+          <span>{t(lang, "displaySize")}</span>
+          <div className="seg" style={{ flex: 1, maxWidth: 280 }}>
+            <button
+              type="button"
+              className={`seg-btn ${uiSize !== "large" ? "active" : ""}`}
+              aria-pressed={uiSize !== "large"}
+              {...press(() => setUiSize("normal"))}
+            >
+              {t(lang, "sizeNormal")}
+            </button>
+            <button
+              type="button"
+              className={`seg-btn ${uiSize === "large" ? "active" : ""}`}
+              aria-pressed={uiSize === "large"}
+              {...press(() => setUiSize("large"))}
+            >
+              {t(lang, "sizeLarge")}
             </button>
           </div>
         </div>
