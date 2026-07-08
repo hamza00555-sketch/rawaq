@@ -51,6 +51,7 @@ function MainApp() {
   const [lastShare, setLastShare] = useStoredState(STORAGE_KEYS.lastShare, null);
   const [taskLog, setTaskLog] = useStoredState(STORAGE_KEYS.taskLog, {});
   const [contract, setContract] = useStoredState(STORAGE_KEYS.contract, null);
+  const [houseMap, setHouseMap] = useStoredState(STORAGE_KEYS.houseMap, { blocks: {} });
 
   const [tab, setTab] = useState("home");
   const [splash, setSplash] = useState(true);
@@ -181,7 +182,15 @@ function MainApp() {
           onFinishVisit={finishVisit}
         />
       )}
-      {tab === "rooms" && <RoomsScreen lang={lang} rooms={rooms} setRooms={setRooms} />}
+      {tab === "rooms" && (
+        <RoomsScreen
+          lang={lang}
+          rooms={rooms}
+          setRooms={setRooms}
+          houseMap={houseMap}
+          setHouseMap={setHouseMap}
+        />
+      )}
       {tab === "settings" && (
         <SettingsScreen
           lang={lang}
@@ -220,6 +229,7 @@ function MainApp() {
         today={safeToday}
         owner={owner}
         rooms={rooms}
+        houseMap={houseMap}
         lastShare={lastShare}
         onShared={setLastShare}
       />

@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   taskLog: "rawaq_task_log",
   contract: "rawaq_contract",
   uiSize: "rawaq_uisize",
+  houseMap: "rawaq_housemap",
 };
 
 export const ROOM_TYPES = ["kitchen", "bathroom", "bedroom", "living", "general"];

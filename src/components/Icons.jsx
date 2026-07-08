@@ -49,6 +49,12 @@ const PATHS = {
     </>
   ),
   moon: <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" />,
+  map: (
+    <>
+      <path d="M9 4L3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Z" />
+      <path d="M9 4v14M15 6v14" />
+    </>
+  ),
   "chevron-left": <path d="M14.5 6L8.5 12l6 6" />,
   "chevron-right": <path d="M9.5 6l6 6-6 6" />,
   check: <path d="M5 12.5l4.5 4.5L19 7.5" />,

@@ -3,6 +3,8 @@ import { t } from "../i18n.js";
 import { formatDate } from "../data.js";
 import { press } from "../press.js";
 import { fetchShare, updateShareTasks } from "../shares.js";
+import { roomDone } from "../houseMap.js";
+import HouseMap from "../components/HouseMap.jsx";
 import RawaqLogo from "../components/RawaqLogo.jsx";
 import Icon from "../components/Icons.jsx";
 
@@ -14,6 +16,7 @@ export default function WorkerView({ payload, shortId }) {
   const [date, setDate] = useState(payload?.date || "");
   const [roomsMeta, setRoomsMeta] = useState(payload?.rooms || null);
   const [status, setStatus] = useState(payload ? "ready" : "loading");
+  const [selectedRoomId, setSelectedRoomId] = useState(null);
 
   useEffect(() => {
     if (!shortId) return;
@@ -63,6 +66,8 @@ export default function WorkerView({ payload, shortId }) {
   }
 
   // Group by room when the payload carries room meta; flat list otherwise.
+  // Groups follow mom's priority order (older shares have no priority —
+  // insertion order stands in). "Other" tasks always come last.
   const groups = roomsMeta
     ? (() => {
         const byRoom = new Map();
@@ -71,13 +76,41 @@ export default function WorkerView({ payload, shortId }) {
           if (!byRoom.has(key)) byRoom.set(key, []);
           byRoom.get(key).push(task);
         }
-        return [...byRoom.entries()].map(([roomId, list]) => ({
-          roomId,
-          meta: roomsMeta[roomId],
-          tasks: list,
-        }));
+        return [...byRoom.entries()]
+          .map(([roomId, list]) => ({
+            roomId,
+            meta: roomsMeta[roomId],
+            tasks: list,
+          }))
+          .sort(
+            (a, b) =>
+              (a.meta ? (a.meta.priority ?? 999) : 1000) - (b.meta ? (b.meta.priority ?? 999) : 1000)
+          );
       })()
     : [{ roomId: "__all", meta: null, tasks }];
+
+  // The map appears when the share carries block layouts. A block goes
+  // green live as its room's tasks complete (the same tasks state that
+  // syncs back to mom); rooms with no tasks today are dimmed.
+  const hasMap = roomsMeta && Object.values(roomsMeta).some((m) => m.layout);
+  const mapEntries = hasMap
+    ? Object.entries(roomsMeta)
+        .filter(([, m]) => m.layout)
+        .map(([roomId, m]) => ({
+          id: roomId,
+          rect: m.layout,
+          emoji: m.emoji,
+          name: m.name.fil || m.name.ar,
+          type: m.type || "general",
+          priority: m.priority,
+          done: roomDone(tasks, roomId),
+          dimmed: !tasks.some((x) => x.roomId === roomId),
+        }))
+    : [];
+
+  const shownGroups = selectedRoomId
+    ? groups.filter((g) => g.roomId === selectedRoomId)
+    : groups;
 
   const renderTask = (task) => (
     <button
@@ -125,8 +158,32 @@ export default function WorkerView({ payload, shortId }) {
           </div>
         )}
 
+        {hasMap && (
+          <div style={{ marginBottom: 18 }}>
+            <HouseMap
+              entries={mapEntries}
+              selectedId={selectedRoomId}
+              onTapRoom={(id) => setSelectedRoomId(id === selectedRoomId ? null : id)}
+            />
+            <p className="muted center-text" style={{ fontSize: 13, marginTop: 8 }}>
+              {t("fil", "tapRoomOnMap")}
+            </p>
+          </div>
+        )}
+
+        {selectedRoomId && (
+          <button
+            type="button"
+            className="btn btn-soft"
+            style={{ marginBottom: 12 }}
+            {...press(() => setSelectedRoomId(null))}
+          >
+            <Icon name="chevron-left" size={18} /> {t("fil", "allRooms")}
+          </button>
+        )}
+
         <div className="stack">
-          {groups.map((group) =>
+          {shownGroups.map((group) =>
             group.meta || group.roomId === "__other" ? (
               <section key={group.roomId} className="stack" style={{ gap: 10 }}>
                 <h2 className="worker-group-title">

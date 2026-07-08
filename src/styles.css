@@ -32,6 +32,8 @@
   --badge-text: #4338CA;
   --gold: #38BDF8;
   --danger: #DC2626;
+  --success: #16A34A;
+  --success-soft: rgba(22, 163, 74, 0.15);
   --border: rgba(28, 28, 38, 0.1);
   --ring-track: rgba(28, 28, 38, 0.08);
   --focus: #4F46E5;
@@ -65,6 +67,8 @@
   --badge-text: #C7D2FE;
   --gold: #67E8F9;
   --danger: #F87171;
+  --success: #4ADE80;
+  --success-soft: rgba(74, 222, 128, 0.16);
   --border: rgba(255, 255, 255, 0.1);
   --ring-track: rgba(255, 255, 255, 0.12);
   --focus: #A5B4FC;
@@ -98,6 +102,8 @@
   --badge-text: #D4C2FF;
   --gold: #F2BA62;
   --danger: #FF9A8B;
+  --success: #6EE7A0;
+  --success-soft: rgba(110, 231, 160, 0.18);
   --border: rgba(255, 255, 255, 0.1);
   --ring-track: rgba(255, 255, 255, 0.12);
   --focus: #C9B2FF;
@@ -947,4 +953,205 @@ select.input { appearance: auto; }
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ============ House map — rooms as blocks on a 6×8 grid ============ */
+
+.house-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 6 / 8;
+  border-radius: var(--radius);
+  background:
+    repeating-linear-gradient(to right, transparent 0, transparent calc(100% / 6 - 1px), var(--border) calc(100% / 6 - 1px), var(--border) calc(100% / 6)),
+    repeating-linear-gradient(to bottom, transparent 0, transparent calc(100% / 8 - 1px), var(--border) calc(100% / 8 - 1px), var(--border) calc(100% / 8)),
+    var(--surface-2);
+  border: 1px solid var(--border);
+  /* overflow stays visible: the selected block's resize handle and remove
+     chip overhang the block (and can overhang the grid edge) — clipping
+     them would also remove their hit areas. */
+}
+
+.house-map.editing { touch-action: none; }
+
+.map-block {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--row-solid);
+  color: var(--text);
+  font-family: inherit;
+  padding: 4px;
+  transition: background 0.25s ease, border-color 0.25s ease, opacity 0.2s ease;
+}
+
+.map-block .map-emoji { font-size: 24px; line-height: 1; pointer-events: none; }
+.map-block.small .map-emoji { font-size: 18px; }
+.map-block .map-name {
+  font-size: 12px;
+  font-weight: 700;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.map-block.small .map-name { display: none; }
+
+/* Soft tints per room type */
+.map-block.type-kitchen { background: rgba(251, 146, 60, 0.16); border-color: rgba(251, 146, 60, 0.35); }
+.map-block.type-bathroom { background: rgba(56, 189, 248, 0.16); border-color: rgba(56, 189, 248, 0.35); }
+.map-block.type-bedroom { background: rgba(217, 122, 249, 0.14); border-color: rgba(217, 122, 249, 0.32); }
+.map-block.type-living { background: rgba(99, 102, 241, 0.14); border-color: rgba(99, 102, 241, 0.32); }
+.map-block.type-general { background: rgba(148, 163, 184, 0.16); border-color: rgba(148, 163, 184, 0.35); }
+
+.rawaq-dark .map-block.type-kitchen, .rawaq-worker .map-block.type-kitchen { background: rgba(251, 146, 60, 0.2); border-color: rgba(251, 146, 60, 0.4); }
+.rawaq-dark .map-block.type-bathroom, .rawaq-worker .map-block.type-bathroom { background: rgba(56, 189, 248, 0.18); border-color: rgba(56, 189, 248, 0.4); }
+.rawaq-dark .map-block.type-bedroom, .rawaq-worker .map-block.type-bedroom { background: rgba(217, 122, 249, 0.18); border-color: rgba(217, 122, 249, 0.38); }
+.rawaq-dark .map-block.type-living, .rawaq-worker .map-block.type-living { background: rgba(165, 180, 252, 0.16); border-color: rgba(165, 180, 252, 0.38); }
+.rawaq-dark .map-block.type-general, .rawaq-worker .map-block.type-general { background: rgba(148, 163, 184, 0.2); border-color: rgba(148, 163, 184, 0.4); }
+
+.map-priority {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  background: var(--primary);
+  color: var(--on-primary);
+  pointer-events: none;
+}
+
+.map-block.done {
+  background: var(--success-soft) !important;
+  border-color: var(--success) !important;
+}
+.map-block.done .map-priority { background: var(--success); color: #fff; }
+.rawaq-light .map-block.done .map-priority { color: #fff; }
+
+.map-block.dimmed { opacity: 0.45; }
+
+/* Editor states */
+.map-block.selected {
+  border-color: var(--primary);
+  border-width: 2px;
+  box-shadow: 0 0 0 3px var(--primary-soft), var(--shadow);
+  z-index: 3;
+}
+.map-block.dragging {
+  z-index: 4;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+  transition: none;
+}
+.map-block.invalid {
+  border-color: var(--danger);
+  background: rgba(220, 38, 38, 0.14) !important;
+}
+
+.map-ghost {
+  position: absolute;
+  border: 2px dashed var(--primary);
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  pointer-events: none;
+  z-index: 2;
+}
+.map-ghost.invalid { border-color: var(--danger); background: rgba(220, 38, 38, 0.12); }
+
+.map-resize-handle {
+  position: absolute;
+  bottom: -14px;
+  right: -14px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  touch-action: none;
+}
+.map-resize-handle::after {
+  content: "";
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 3px solid var(--surface-solid);
+  box-shadow: var(--shadow);
+}
+
+.map-remove-chip {
+  position: absolute;
+  top: -14px;
+  left: -14px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+.map-remove-chip::after {
+  content: "✕";
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  background: var(--danger);
+  color: #fff;
+  border: 3px solid var(--surface-solid);
+  box-shadow: var(--shadow);
+}
+
+.map-chip-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.map-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1.5px dashed var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+}
+
+.priority-row-num {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  background: var(--primary-soft);
+  color: var(--badge-text);
+  flex-shrink: 0;
 }

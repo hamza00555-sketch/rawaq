@@ -10,6 +10,7 @@ import TaskEditSheet from "../components/TaskEditSheet.jsx";
 import RoomEditorSheet from "../components/RoomEditorSheet.jsx";
 import Snackbar from "../components/Snackbar.jsx";
 import Icon from "../components/Icons.jsx";
+import HouseMapScreen from "./HouseMapScreen.jsx";
 
 const badge = (lang, task) => (
   <>
@@ -135,10 +136,11 @@ function RoomDetail({ lang, room, updateRoom, onEditRoom, onBack }) {
   );
 }
 
-export default function RoomsScreen({ lang, rooms, setRooms }) {
+export default function RoomsScreen({ lang, rooms, setRooms, houseMap, setHouseMap }) {
   const [openRoomId, setOpenRoomId] = useState(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorRoomId, setEditorRoomId] = useState(null); // null = add mode
+  const [mapOpen, setMapOpen] = useState(false);
   const [snack, setSnack] = useState(null);
 
   const openRoom = rooms.find((x) => x.id === openRoomId);
@@ -172,6 +174,19 @@ export default function RoomsScreen({ lang, rooms, setRooms }) {
     });
   };
 
+  if (mapOpen) {
+    return (
+      <HouseMapScreen
+        lang={lang}
+        rooms={rooms}
+        setRooms={setRooms}
+        houseMap={houseMap}
+        setHouseMap={setHouseMap}
+        onBack={() => setMapOpen(false)}
+      />
+    );
+  }
+
   if (openRoom) {
     return (
       <>
@@ -202,6 +217,9 @@ export default function RoomsScreen({ lang, rooms, setRooms }) {
     <div className="screen">
       <header className="appbar">
         <h1>{t(lang, "rooms")}</h1>
+        <button type="button" className="icon-btn" aria-label={t(lang, "houseMap")} {...press(() => setMapOpen(true))}>
+          <Icon name="map" size={22} />
+        </button>
       </header>
       <div className="rooms-grid">
         {rooms.map((room) => (

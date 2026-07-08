@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { t } from "../i18n.js";
 import { taskFingerprint, todayStr } from "../data.js";
+import { sanitizeMap } from "../houseMap.js";
 import { createShare, shareIdFromLink } from "../shares.js";
 import BottomSheet from "./BottomSheet.jsx";
 import QRCanvas from "./QRCanvas.jsx";
 import Icon from "./Icons.jsx";
 
-export default function ShareModal({ open, onClose, lang, today, owner, rooms, lastShare, onShared }) {
+export default function ShareModal({ open, onClose, lang, today, owner, rooms, houseMap, lastShare, onShared }) {
   const [copied, setCopied] = useState(false);
   const [state, setState] = useState({ status: "loading", link: "" });
   const openRef = useRef(open);
@@ -26,7 +27,16 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, l
     }
 
     setState({ status: "loading", link: "" });
-    const roomsMeta = Object.fromEntries(rooms.map((r) => [r.id, { name: r.name, emoji: r.emoji }]));
+    // Map layout + priority ride inside the rooms meta values: the published
+    // Firestore rules only whitelist top-level doc keys, so this needs no
+    // rules change. Worker updates still touch only {tasks, updatedAt}.
+    const { blocks } = sanitizeMap(houseMap, rooms);
+    const roomsMeta = Object.fromEntries(
+      rooms.map((r, i) => [
+        r.id,
+        { name: r.name, emoji: r.emoji, type: r.type || "general", layout: blocks[r.id] || null, priority: i + 1 },
+      ])
+    );
     createShare({ date: today.date, owner, tasks: today.tasks, rooms: roomsMeta })
       .then((link) => {
         if (!openRef.current) return;
@@ -43,7 +53,7 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, l
         if (!openRef.current) return;
         setState({ status: "error", link: "", reason: err?.code === "rules" ? "rules" : "network" });
       });
-  }, [today, owner, rooms, lastShare, onShared]);
+  }, [today, owner, rooms, houseMap, lastShare, onShared]);
 
   useEffect(() => {
     if (open) prepare();
