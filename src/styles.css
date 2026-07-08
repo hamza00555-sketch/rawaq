@@ -110,10 +110,19 @@
 
 html, body, #root { height: 100%; }
 
+/* App-like viewport: no rubber-band bounce, no double-tap zoom, no
+   horizontal wiggle. In-app zooming is served by the large-UI setting. */
+html {
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
 body {
   font-family: var(--font-latin);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+  overflow-x: hidden;
 }
 
 html[lang="ar"] body { font-family: var(--font-ar); }
@@ -137,21 +146,19 @@ html[lang="ar"] body { font-family: var(--font-ar); }
   inset: -12%;
   z-index: -1;
   pointer-events: none;
-  will-change: transform;
 }
 
+/* Static ambient gradients — the drift animation read as the app "moving" */
 .app::before {
   background:
     radial-gradient(42% 38% at 18% 22%, var(--blob-a) 0%, transparent 70%),
     radial-gradient(46% 40% at 85% 12%, var(--blob-c) 0%, transparent 70%);
-  animation: blob-drift-a 26s ease-in-out infinite alternate;
 }
 
 .app::after {
   background:
     radial-gradient(44% 42% at 78% 82%, var(--blob-b) 0%, transparent 70%),
     radial-gradient(36% 34% at 12% 78%, var(--blob-c) 0%, transparent 70%);
-  animation: blob-drift-b 34s ease-in-out infinite alternate;
 }
 
 /* ---------- Layout ---------- */
@@ -606,7 +613,7 @@ label.btn:focus-within {
   box-shadow: var(--glass-hilite);
   color: var(--text);
   font: inherit;
-  font-size: 15px;
+  font-size: 16px; /* <16px triggers iOS auto-zoom on focus */
 }
 
 .input::placeholder { color: var(--text-2); }
@@ -909,14 +916,6 @@ select.input { appearance: auto; }
   from { transform: translate(-50%, 24px); opacity: 0; }
   to { transform: translate(-50%, 0); opacity: 1; }
 }
-@keyframes blob-drift-a {
-  from { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-  to { transform: translate3d(4%, -3%, 0) rotate(6deg) scale(1.08); }
-}
-@keyframes blob-drift-b {
-  from { transform: translate3d(0, 0, 0) rotate(0deg) scale(1.06); }
-  to { transform: translate3d(-4%, 3%, 0) rotate(-6deg) scale(1); }
-}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -924,5 +923,4 @@ select.input { appearance: auto; }
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .app::before, .app::after { animation: none !important; }
 }
