@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { t } from "../i18n.js";
 import { press } from "../press.js";
-import RawaqLogo from "../components/RawaqLogo.jsx";
 
 // First-run only: a friendly ask for mom's name (skippable).
 export default function WelcomeScreen({ lang, onDone }) {
@@ -9,7 +8,11 @@ export default function WelcomeScreen({ lang, onDone }) {
 
   return (
     <div className="splash welcome" style={{ gap: 14, padding: 24 }}>
-      <RawaqLogo size={84} />
+      <img
+        src="/illustrations/welcome.webp"
+        alt=""
+        style={{ width: "min(300px, 78%)", height: "auto", marginBottom: 4 }}
+      />
       <h1 style={{ fontSize: 28 }}>{t(lang, "welcomeTitle")}</h1>
       <p className="muted" style={{ fontSize: 18 }}>{t(lang, "welcomeAsk")}</p>
       <input

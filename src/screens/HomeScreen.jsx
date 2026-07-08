@@ -44,9 +44,10 @@ export default function HomeScreen({ lang, owner, today, rooms, setRooms, histor
           </span>
         )}
         {complete && (
-          <p className="congrats" role="status">
-            {t(lang, "congrats100")}
-          </p>
+          <div className="congrats celebrate-pop" role="status" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <img src="/illustrations/celebrate.webp" alt="" className="celebrate-illus" />
+            <p>{t(lang, "congrats100")}</p>
+          </div>
         )}
       </section>
 

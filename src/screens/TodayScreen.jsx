@@ -105,7 +105,10 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
 
       <div className="today-list">
         {total === 0 ? (
-          <div className="card center-text muted">{t(lang, "noTasks")}</div>
+          <div className="card center-text muted empty-state">
+            <img src="/illustrations/empty.webp" alt="" className="empty-illus" />
+            <p>{t(lang, "noTasks")}</p>
+          </div>
         ) : (
           <div className="stack" style={{ gap: 6 }}>
             {groups.map((group) => (
@@ -146,8 +149,9 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
       </button>
 
       {total > 0 && done === total && (
-        <div className="card center-text congrats" style={{ marginTop: 14 }}>
-          {t(lang, "allDone")}
+        <div className="card center-text congrats celebrate-pop" style={{ marginTop: 14 }}>
+          <img src="/illustrations/celebrate.webp" alt="" className="celebrate-illus" />
+          <p>{t(lang, "allDone")}</p>
         </div>
       )}
 
