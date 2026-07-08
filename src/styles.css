@@ -849,6 +849,12 @@ select.input { appearance: auto; }
   color: var(--on-primary);
 }
 
+.today-group-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 10px 2px 8px;
+}
+
 .worker-group-title {
   font-size: 15px;
   font-weight: 700;

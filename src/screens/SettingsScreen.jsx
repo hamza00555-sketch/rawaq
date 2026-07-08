@@ -14,15 +14,11 @@ const weekdayName = (lang, day) => {
   }
 };
 
-// Full reset: remove every app key, reload → welcome screen + defaults.
+// Full reset: flag it, then reload — main.jsx wipes every rawaq_* key
+// before React mounts, so nothing can re-persist old state mid-reset.
 const resetAllData = () => {
-  const keys = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith("rawaq_")) keys.push(key);
-  }
-  keys.forEach((key) => localStorage.removeItem(key));
-  window.location.reload();
+  sessionStorage.setItem("rawaq_reset", "1");
+  window.location.replace(window.location.pathname);
 };
 
 export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history, contract, setContract, uiSize, setUiSize }) {

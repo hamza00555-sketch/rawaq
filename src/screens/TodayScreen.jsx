@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { t } from "../i18n.js";
 import { formatDate } from "../data.js";
 import { press } from "../press.js";
@@ -15,6 +15,29 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
 
   const total = today.tasks.length;
   const done = today.tasks.filter((x) => x.done).length;
+
+  // Today's list grouped under its rooms (rooms order; roomless extras last)
+  const groups = useMemo(() => {
+    const byRoom = new Map();
+    for (const task of today.tasks) {
+      const key = task.roomId && rooms.some((r) => r.id === task.roomId) ? task.roomId : "__other";
+      if (!byRoom.has(key)) byRoom.set(key, []);
+      byRoom.get(key).push(task);
+    }
+    const ordered = [];
+    for (const room of rooms) {
+      if (byRoom.has(room.id)) ordered.push({ key: room.id, room, tasks: byRoom.get(room.id) });
+    }
+    if (byRoom.has("__other")) ordered.push({ key: "__other", room: null, tasks: byRoom.get("__other") });
+    return ordered;
+  }, [today.tasks, rooms]);
+
+  // Reordering happens within a group; global order = groups flattened
+  const reorderGroup = (groupKey) => (groupTasks) =>
+    setToday({
+      ...today,
+      tasks: groups.flatMap((g) => (g.key === groupKey ? groupTasks : g.tasks)),
+    });
 
   const toggle = (task) =>
     setToday({
@@ -84,23 +107,37 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
         {total === 0 ? (
           <div className="card center-text muted">{t(lang, "noTasks")}</div>
         ) : (
-          <DraggableTaskList
-            tasks={today.tasks}
-            renderName={(task) => (
-              <>
-                {task.name[lang] || task.name.ar}
-                {task.freq === "monthly" && (
-                  <span className="task-badge badge-monthly">{t(lang, "monthly")}</span>
-                )}
-                {task.depth === "deep" && (
-                  <span className="task-badge badge-deep">{t(lang, "deep")}</span>
-                )}
-              </>
-            )}
-            onToggle={toggle}
-            onReorder={(tasks) => setToday({ ...today, tasks })}
-            onSwipeDelete={removeFromToday}
-          />
+          <div className="stack" style={{ gap: 6 }}>
+            {groups.map((group) => (
+              <section key={group.key}>
+                <h2 className="today-group-title">
+                  {group.room
+                    ? `${group.room.emoji} ${group.room.name[lang] || group.room.name.ar}`
+                    : t(lang, "otherTasks")}
+                  <span className="muted" style={{ fontWeight: 400 }}>
+                    {" "}· {group.tasks.filter((x) => x.done).length}/{group.tasks.length}
+                  </span>
+                </h2>
+                <DraggableTaskList
+                  tasks={group.tasks}
+                  renderName={(task) => (
+                    <>
+                      {task.name[lang] || task.name.ar}
+                      {task.freq === "monthly" && (
+                        <span className="task-badge badge-monthly">{t(lang, "monthly")}</span>
+                      )}
+                      {task.depth === "deep" && (
+                        <span className="task-badge badge-deep">{t(lang, "deep")}</span>
+                      )}
+                    </>
+                  )}
+                  onToggle={toggle}
+                  onReorder={reorderGroup(group.key)}
+                  onSwipeDelete={removeFromToday}
+                />
+              </section>
+            ))}
+          </div>
         )}
       </div>
 
