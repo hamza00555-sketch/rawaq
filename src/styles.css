@@ -3,10 +3,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --radius: 22px;
-  --radius-sm: 16px;
-  --font-ar: "Alexandria", system-ui, sans-serif;
-  --font-latin: "Alexandria", system-ui, sans-serif;
+  --radius: 20px;
+  --radius-sm: 14px;
+  --font-ar: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-latin: "IBM Plex Sans Arabic", system-ui, sans-serif;
 }
 
 /* ---------- Light: white-dominant + subtle indigo/sky/orchid blobs ---------- */
@@ -124,8 +124,8 @@ html[lang="ar"] body { font-family: var(--font-ar); }
   min-height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-size: 16px;
-  line-height: 1.65;
+  font-size: 15px;
+  line-height: 1.55;
   transition: background 0.3s ease, color 0.3s ease;
 }
 
@@ -158,7 +158,7 @@ html[lang="ar"] body { font-family: var(--font-ar); }
 .screen {
   max-width: 640px;
   margin: 0 auto;
-  padding: 16px 20px 110px;
+  padding: 14px 18px 100px;
   animation: fade-in 0.25s ease;
 }
 
@@ -167,21 +167,21 @@ html[lang="ar"] body { font-family: var(--font-ar); }
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 0 6px;
+  padding: 10px 0 4px;
 }
 
 .appbar h1 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
 }
 
 .section-title {
-  font-size: 17px;
+  font-size: 15.5px;
   font-weight: 600;
-  margin: 22px 0 10px;
+  margin: 18px 0 8px;
 }
 
-.muted { color: var(--text-2); font-size: 15px; font-weight: 400; }
+.muted { color: var(--text-2); font-size: 13.5px; font-weight: 400; }
 
 /* ---------- Glass cards ---------- */
 .card {
@@ -189,7 +189,7 @@ html[lang="ar"] body { font-family: var(--font-ar); }
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   box-shadow: var(--glass-hilite), var(--shadow);
-  padding: 18px;
+  padding: 14px;
 }
 
 /* ---------- Buttons ---------- */
@@ -213,10 +213,10 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 48px;
-  padding: 10px 22px;
-  border-radius: 24px;
-  font-size: 16px;
+  min-height: 46px;
+  padding: 9px 18px;
+  border-radius: 23px;
+  font-size: 15px;
   font-weight: 600;
   background: var(--glass);
   border: 1px solid var(--glass-border);
@@ -242,9 +242,9 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 .btn-block { width: 100%; }
 
 .btn-hero {
-  min-height: 62px;
-  font-size: 18px;
-  border-radius: 31px;
+  min-height: 56px;
+  font-size: 16.5px;
+  border-radius: 28px;
 }
 
 label.btn {
@@ -304,9 +304,9 @@ label.btn:focus-within {
 
 .seg-btn {
   flex: 1;
-  min-height: 44px;
-  border-radius: 20px;
-  font-size: 15px;
+  min-height: 42px;
+  border-radius: 19px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-2);
   transition: background 0.2s ease, color 0.2s ease;
@@ -320,7 +320,7 @@ label.btn:focus-within {
 }
 
 /* ---------- Task rows (glass shell, opaque sliding inner) ---------- */
-.task-list { display: flex; flex-direction: column; gap: 10px; }
+.task-list { display: flex; flex-direction: column; gap: 8px; }
 
 .task-row {
   position: relative;
@@ -339,9 +339,9 @@ label.btn:focus-within {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  min-height: 56px;
+  gap: 12px;
+  padding: 11px 14px;
+  min-height: 52px;
   background: var(--row-solid);
   transition: transform 0.15s ease;
 }
@@ -371,16 +371,16 @@ label.btn:focus-within {
   text-decoration-thickness: 2px;
 }
 
-.task-name { flex: 1; font-size: 16px; }
+.task-name { flex: 1; font-size: 15px; }
 
 .task-check {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
-  border-radius: 11px;
+  border-radius: 10px;
   border: 1.5px solid var(--border);
   background: var(--surface-2);
   color: transparent;
@@ -398,9 +398,9 @@ label.btn:focus-within {
 .task-badge {
   display: inline-block;
   margin-inline-start: 8px;
-  padding: 2px 10px;
-  border-radius: 11px;
-  font-size: 12px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
   font-weight: 600;
   background: var(--surface-2);
   color: var(--text-2);
@@ -436,7 +436,7 @@ label.btn:focus-within {
   justify-content: center;
 }
 
-.ring-pct { font-size: 32px; font-weight: 700; color: var(--primary); }
+.ring-pct { font-size: 30px; font-weight: 700; color: var(--primary); }
 
 .ring-celebrate { animation: celebrate-pulse 1.6s ease-in-out 2; }
 
@@ -451,7 +451,7 @@ label.btn:focus-within {
 .rooms-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 12px;
 }
 
 .room-card {
@@ -485,8 +485,8 @@ label.btn:focus-within {
   background: var(--primary-soft);
 }
 
-.room-card-body { padding: 12px 14px 14px; }
-.room-card-body h3 { font-size: 16px; font-weight: 600; }
+.room-card-body { padding: 10px 12px 12px; }
+.room-card-body h3 { font-size: 15px; font-weight: 600; }
 
 .add-room-card {
   display: flex;
@@ -525,11 +525,11 @@ label.btn:focus-within {
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  min-width: 56px;
-  min-height: 52px;
-  padding: 6px 8px;
-  border-radius: 18px;
-  font-size: 12px;
+  min-width: 54px;
+  min-height: 50px;
+  padding: 5px 8px;
+  border-radius: 17px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--text-2);
 }
@@ -598,15 +598,15 @@ label.btn:focus-within {
 /* ---------- Inputs ---------- */
 .input {
   width: 100%;
-  min-height: 50px;
-  padding: 12px 16px;
+  min-height: 46px;
+  padding: 10px 14px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
   background: var(--surface-2);
   box-shadow: var(--glass-hilite);
   color: var(--text);
   font: inherit;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .input::placeholder { color: var(--text-2); }
@@ -682,8 +682,8 @@ select.input { appearance: auto; }
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  min-height: 56px;
-  padding: 8px 0;
+  min-height: 52px;
+  padding: 6px 0;
 }
 
 .setting-row + .setting-row { border-top: 1px solid var(--border); }
@@ -696,13 +696,13 @@ select.input { appearance: auto; }
 }
 
 .task-chip {
-  min-height: 44px;
-  padding: 8px 16px;
-  border-radius: 22px;
+  min-height: 42px;
+  padding: 7px 14px;
+  border-radius: 21px;
   background: var(--glass);
   border: 1.5px solid var(--glass-border);
   box-shadow: var(--glass-hilite);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
@@ -806,13 +806,13 @@ select.input { appearance: auto; }
 
 /* ---------- Today list: bigger touch targets ---------- */
 .today-list .task-check {
-  width: 38px;
-  height: 38px;
-  border-radius: 13px;
-  font-size: 22px;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  font-size: 20px;
 }
 
-.today-list .task-row-inner { min-height: 64px; }
+.today-list .task-row-inner { min-height: 58px; }
 
 /* ---------- Worker mode ---------- */
 .worker-task {
@@ -825,15 +825,15 @@ select.input { appearance: auto; }
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   box-shadow: var(--glass-hilite), var(--shadow);
-  padding: 22px 20px;
-  min-height: 84px;
-  font-size: 20px;
+  padding: 18px 16px;
+  min-height: 74px;
+  font-size: 17.5px;
   font-weight: 600;
   transition: transform 0.12s ease;
 }
 .worker-task:active { transform: scale(0.98); }
 
-.worker-task .task-check { width: 38px; height: 38px; border-radius: 13px; font-size: 22px; }
+.worker-task .task-check { width: 34px; height: 34px; border-radius: 12px; font-size: 20px; }
 .worker-task.done { color: var(--text-2); }
 .worker-task.done .task-name { text-decoration: line-through; text-decoration-thickness: 2.5px; }
 .worker-task.done .task-check {
@@ -843,7 +843,7 @@ select.input { appearance: auto; }
 }
 
 .worker-group-title {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-2);
   margin-top: 8px;
@@ -865,8 +865,8 @@ select.input { appearance: auto; }
 }
 
 .splash svg { animation: pop-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
-.splash h1 { font-size: 32px; font-weight: 700; color: var(--primary); }
-.splash p { color: var(--text-2); font-size: 17px; }
+.splash h1 { font-size: 28px; font-weight: 700; color: var(--primary); }
+.splash p { color: var(--text-2); font-size: 15px; }
 .splash.leaving { animation: fade-out 0.35s ease forwards; }
 
 /* ---------- Utility ---------- */
