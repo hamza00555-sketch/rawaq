@@ -14,7 +14,6 @@ export default function WelcomeScreen({ lang, onDone }) {
         style={{ width: "min(260px, 66%)", height: "auto", marginBottom: 2 }}
       />
       <h1 style={{ fontSize: 28 }}>{t(lang, "welcomeTitle")}</h1>
-      <p className="muted" style={{ fontSize: 18 }}>{t(lang, "welcomeAsk")}</p>
       <input
         className="input"
         style={{ maxWidth: 320, textAlign: "center" }}
