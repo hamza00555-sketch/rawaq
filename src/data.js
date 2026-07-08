@@ -19,9 +19,8 @@ export const EMOJI_PRESETS = [
   "🕌", "🎮", "🧼", "🪴", "🐈", "👶", "💼", "✨",
 ];
 
-// freq: weekly (due each week) | monthly (due once a calendar month)
-// depth: surface | deep — an informational tag, independent of freq
-const task = (id, freq, depth, ar, en, fil) => ({ id, name: { ar, en, fil }, freq, depth });
+// Task shape: {id, name:{ar,en,fil}, freq: weekly|monthly, depth: surface|deep}
+// A fresh app seeds rooms with NO tasks — mom adds them (library or custom).
 const lib = (ar, en, fil) => ({ ar, en, fil });
 
 // Ready-made task suggestions per room type, trilingual.
@@ -120,15 +119,7 @@ export const DEFAULT_ROOMS = [
     type: "living",
     name: { ar: "المجلس", en: "Majlis", fil: "Sala" },
     photo: null,
-    tasks: [
-      task("mj-s1", "weekly", "surface", "تنفيض الغبار", "Dust surfaces", "Alisin ang alikabok"),
-      task("mj-s2", "weekly", "surface", "ترتيب الوسائد", "Arrange cushions", "Ayusin ang mga unan"),
-      task("mj-s3", "weekly", "surface", "كنس السجاد", "Vacuum carpet", "I-vacuum ang karpet"),
-      task("mj-s4", "weekly", "surface", "مسح الطاولات", "Wipe tables", "Punasan ang mga mesa"),
-      task("mj-d1", "monthly", "deep", "غسيل الستائر", "Wash curtains", "Labhan ang mga kurtina"),
-      task("mj-d2", "monthly", "deep", "تنظيف تحت الكنب", "Clean under sofas", "Linisin ang ilalim ng sofa"),
-      task("mj-d3", "monthly", "deep", "تنظيف النوافذ", "Clean windows", "Linisin ang mga bintana"),
-    ],
+    tasks: [],
   },
   {
     id: "kitchen",
@@ -136,15 +127,7 @@ export const DEFAULT_ROOMS = [
     type: "kitchen",
     name: { ar: "المطبخ", en: "Kitchen", fil: "Kusina" },
     photo: null,
-    tasks: [
-      task("kt-s1", "weekly", "surface", "غسيل الأطباق", "Wash dishes", "Hugasan ang mga pinggan"),
-      task("kt-s2", "weekly", "surface", "مسح الأسطح", "Wipe counters", "Punasan ang counter"),
-      task("kt-s3", "weekly", "surface", "كنس ومسح الأرضية", "Sweep & mop floor", "Walisin at lampasuhin ang sahig"),
-      task("kt-s4", "weekly", "surface", "إخراج القمامة", "Take out trash", "Ilabas ang basura"),
-      task("kt-d1", "monthly", "deep", "تنظيف الفرن", "Clean the oven", "Linisin ang oven"),
-      task("kt-d2", "monthly", "deep", "تنظيف الثلاجة", "Clean the fridge", "Linisin ang ref"),
-      task("kt-d3", "monthly", "deep", "ترتيب الدواليب", "Organize cabinets", "Ayusin ang mga kabinet"),
-    ],
+    tasks: [],
   },
   {
     id: "bedroom",
@@ -152,14 +135,7 @@ export const DEFAULT_ROOMS = [
     type: "bedroom",
     name: { ar: "غرفة النوم", en: "Bedroom", fil: "Kwarto" },
     photo: null,
-    tasks: [
-      task("bd-s1", "weekly", "surface", "ترتيب السرير", "Make the bed", "Ayusin ang kama"),
-      task("bd-s2", "weekly", "surface", "تنفيض الغبار", "Dust surfaces", "Alisin ang alikabok"),
-      task("bd-s3", "weekly", "surface", "كنس الأرضية", "Vacuum the floor", "I-vacuum ang sahig"),
-      task("bd-d1", "monthly", "deep", "تغيير المفارش", "Change bed sheets", "Palitan ang kubrekama"),
-      task("bd-d2", "monthly", "deep", "ترتيب الدولاب", "Organize the closet", "Ayusin ang aparador"),
-      task("bd-d3", "monthly", "deep", "مسح المرايا", "Clean mirrors", "Linisin ang mga salamin"),
-    ],
+    tasks: [],
   },
   {
     id: "bathroom",
@@ -167,15 +143,7 @@ export const DEFAULT_ROOMS = [
     type: "bathroom",
     name: { ar: "الحمام", en: "Bathroom", fil: "Banyo" },
     photo: null,
-    tasks: [
-      task("bt-s1", "weekly", "surface", "تنظيف المرحاض", "Clean the toilet", "Linisin ang inidoro"),
-      task("bt-s2", "weekly", "surface", "مسح المغسلة", "Wipe the sink", "Punasan ang lababo"),
-      task("bt-s3", "weekly", "surface", "تغيير المناشف", "Change towels", "Palitan ang mga tuwalya"),
-      task("bt-s4", "weekly", "surface", "مسح الأرضية", "Mop the floor", "Lampasuhin ang sahig"),
-      task("bt-d1", "monthly", "deep", "فرك الدش والبانيو", "Scrub shower & tub", "Kuskusin ang shower at bathtub"),
-      task("bt-d2", "monthly", "deep", "إزالة الترسبات", "Remove limescale", "Alisin ang limescale"),
-      task("bt-d3", "monthly", "deep", "تنظيف فواصل البلاط", "Clean tile grout", "Linisin ang grout ng tiles"),
-    ],
+    tasks: [],
   },
 ];
 
