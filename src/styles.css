@@ -5,8 +5,8 @@
 :root {
   --radius: 20px;
   --radius-sm: 14px;
-  --font-ar: "IBM Plex Sans Arabic", system-ui, sans-serif;
-  --font-latin: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-ar: "Zain", system-ui, sans-serif;
+  --font-latin: "Zain", system-ui, sans-serif;
 }
 
 /* ---------- Light: white-dominant + subtle indigo/sky/orchid blobs ---------- */
