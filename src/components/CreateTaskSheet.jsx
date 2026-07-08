@@ -7,11 +7,10 @@ import FreqDepthPicker from "./FreqDepthPicker.jsx";
 
 // Create-task wizard: pick room → freq + depth → tap a suggested task
 // (or write a custom one). Each pick adds immediately to the room.
-export default function CreateTaskSheet({ open, onClose, lang, rooms, setRooms }) {
+export default function CreateTaskSheet({ open, onClose, lang, rooms, setRooms, onAdded }) {
   const [roomId, setRoomId] = useState(null);
   const [freq, setFreq] = useState("weekly");
   const [depth, setDepth] = useState("surface");
-  const [addedMsg, setAddedMsg] = useState(false);
 
   const room = rooms.find((x) => x.id === roomId);
 
@@ -25,8 +24,7 @@ export default function CreateTaskSheet({ open, onClose, lang, rooms, setRooms }
     if (!room) return;
     const task = { id: `${room.id}-${Date.now().toString(36)}`, name, freq, depth };
     setRooms(rooms.map((r) => (r.id === room.id ? { ...r, tasks: [...r.tasks, task] } : r)));
-    setAddedMsg(true);
-    setTimeout(() => setAddedMsg(false), 1400);
+    onAdded?.();
   };
 
   const existingNames = room ? new Set(room.tasks.map((x) => x.name.ar.trim())) : new Set();
@@ -60,12 +58,6 @@ export default function CreateTaskSheet({ open, onClose, lang, rooms, setRooms }
         {room && (
           <>
             <FreqDepthPicker lang={lang} freq={freq} setFreq={setFreq} depth={depth} setDepth={setDepth} />
-
-            {addedMsg && (
-              <p className="congrats" role="status" style={{ textAlign: "center" }}>
-                {t(lang, "taskAdded")}
-              </p>
-            )}
 
             <TaskLibraryChips
               lang={lang}

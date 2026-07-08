@@ -14,9 +14,21 @@ const weekdayName = (lang, day) => {
   }
 };
 
+// Full reset: remove every app key, reload → welcome screen + defaults.
+const resetAllData = () => {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith("rawaq_")) keys.push(key);
+  }
+  keys.forEach((key) => localStorage.removeItem(key));
+  window.location.reload();
+};
+
 export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history, contract, setContract }) {
   const [nameDraft, setNameDraft] = useState(owner);
   const [savedMsg, setSavedMsg] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const firstRender = useRef(true);
 
   // Auto-save the name (debounced) — no Save button.
@@ -208,8 +220,27 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
         </div>
       )}
 
+      <h2 className="section-title" style={{ color: "var(--danger)" }}>{t(lang, "dangerZone")}</h2>
+      <div className="card">
+        <button
+          type="button"
+          className={`btn btn-block ${confirmReset ? "btn-danger" : ""}`}
+          style={!confirmReset ? { color: "var(--danger)" } : undefined}
+          {...press(() => {
+            if (!confirmReset) {
+              setConfirmReset(true);
+              setTimeout(() => setConfirmReset(false), 5000);
+              return;
+            }
+            resetAllData();
+          })}
+        >
+          <Icon name="trash" size={20} /> {confirmReset ? t(lang, "resetConfirm") : t(lang, "resetApp")}
+        </button>
+      </div>
+
       <p className="muted center-text" style={{ marginTop: 26, fontSize: 13 }}>
-        {t(lang, "appName")} · {t(lang, "version")} 4.1
+        {t(lang, "appName")} · {t(lang, "version")} 5.1
       </p>
     </div>
   );

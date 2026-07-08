@@ -38,6 +38,7 @@ function RoomDetail({ lang, room, updateRoom, onEditRoom, onBack }) {
       ...tasks,
       { id: `${room.id}-${Date.now().toString(36)}`, name, freq: addFreq, depth: addDepth },
     ]);
+    setSnack({ message: t(lang, "taskAdded") });
   };
 
   const deleteTask = (task) => {
@@ -122,7 +123,10 @@ function RoomDetail({ lang, room, updateRoom, onEditRoom, onBack }) {
         onClose={() => setEditTask(null)}
         lang={lang}
         task={editTask}
-        onSave={(next) => setTasks(tasks.map((x) => (x.id === next.id ? next : x)))}
+        onSave={(next) => {
+          setTasks(tasks.map((x) => (x.id === next.id ? next : x)));
+          setSnack({ message: t(lang, "taskSaved") });
+        }}
         onDelete={deleteTask}
       />
 

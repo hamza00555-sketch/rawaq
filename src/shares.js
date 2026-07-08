@@ -88,6 +88,16 @@ export async function createShare({ tasks, date, owner, rooms }) {
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
+  // Compatible with the ORIGINAL security rules (require `mode`, reject
+  // rooms/updatedAt). If the user hasn't published the updated rules yet,
+  // sharing still works — just without room grouping and live sync.
+  const legacyData = {
+    tasks,
+    date,
+    mode: "surface",
+    owner: owner || "",
+    createdAt: Date.now(),
+  };
 
   if (devStore.enabled()) {
     const id = makeShortId();
@@ -98,15 +108,32 @@ export async function createShare({ tasks, date, owner, rooms }) {
   if (!isFirebaseConfigured()) throw new Error("firebase-not-configured");
 
   const { db, firestore } = await getDb();
-  // Rules confine updates to tasks/updatedAt, so a colliding setDoc (which
-  // would change createdAt) fails permission-denied — one retry covers it.
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const id = makeShortId();
+  const write = async (payload) => {
+    // Rules confine updates to tasks/updatedAt, so a colliding setDoc (which
+    // would change createdAt) fails permission-denied — one retry covers it.
+    let lastErr;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const id = makeShortId();
+      try {
+        await firestore.setDoc(firestore.doc(db, "shares", id), payload);
+        return shareLink(id);
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    throw lastErr;
+  };
+
+  try {
+    return await write(data);
+  } catch (err) {
+    if (err?.code !== "permission-denied") throw err;
     try {
-      await firestore.setDoc(firestore.doc(db, "shares", id), data);
-      return shareLink(id);
-    } catch (err) {
-      if (attempt === 1) throw err;
+      return await write(legacyData);
+    } catch (err2) {
+      const wrapped = new Error("share-rules-outdated");
+      wrapped.code = err2?.code === "permission-denied" ? "rules" : "network";
+      throw wrapped;
     }
   }
 }

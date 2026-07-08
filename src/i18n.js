@@ -116,7 +116,11 @@ export const T = {
     visitTodayBanner: "اليوم زيارة العاملة — شاركي المهام",
     shareHero: "مشاركة مهام اليوم مع العاملة",
     shareError: "تعذر إنشاء الرابط — تحققي من الاتصال",
+    shareErrorRules: "تعذر إنشاء الرابط — يجب تحديث قواعد الأمان في Firebase",
     retry: "إعادة المحاولة",
+    dangerZone: "منطقة الخطر",
+    resetApp: "مسح كل البيانات والبدء من جديد",
+    resetConfirm: "سيُمسح كل شيء نهائياً — اضغطي للتأكيد",
   },
   en: {
     appName: "Rawaq",
@@ -229,7 +233,11 @@ export const T = {
     visitTodayBanner: "The worker visits today — share the tasks",
     shareHero: "Share today's tasks with the worker",
     shareError: "Couldn't create the link — check your connection",
+    shareErrorRules: "Couldn't create the link — update the Firebase security rules",
     retry: "Try again",
+    dangerZone: "Danger zone",
+    resetApp: "Erase all data and start over",
+    resetConfirm: "Everything will be permanently erased — tap to confirm",
   },
   fil: {
     appName: "Rawaq",
@@ -342,7 +350,11 @@ export const T = {
     visitTodayBanner: "Bisita ng worker ngayon — ibahagi ang mga gawain",
     shareHero: "Ibahagi ang mga gawain ngayon sa worker",
     shareError: "Hindi magawa ang link — suriin ang koneksyon",
+    shareErrorRules: "Hindi magawa ang link — i-update ang Firebase security rules",
     retry: "Subukan muli",
+    dangerZone: "Danger zone",
+    resetApp: "Burahin lahat ng data at magsimula muli",
+    resetConfirm: "Buburahin nang permanente ang lahat — pindutin para kumpirmahin",
   },
 };
 

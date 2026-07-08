@@ -39,9 +39,9 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, l
           sharedAt: Date.now(),
         });
       })
-      .catch(() => {
+      .catch((err) => {
         if (!openRef.current) return;
-        setState({ status: "error", link: "" });
+        setState({ status: "error", link: "", reason: err?.code === "rules" ? "rules" : "network" });
       });
   }, [today, owner, rooms, lastShare, onShared]);
 
@@ -97,7 +97,7 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, l
         {state.status === "error" && (
           <div className="stack center-text" style={{ alignItems: "center", padding: "24px 0" }}>
             <p role="alert" style={{ color: "var(--danger)", fontWeight: 600 }}>
-              {t(lang, "shareError")}
+              {t(lang, state.reason === "rules" ? "shareErrorRules" : "shareError")}
             </p>
             <button type="button" className="btn btn-primary" onClick={prepare}>
               <Icon name="refresh" size={20} /> {t(lang, "retry")}

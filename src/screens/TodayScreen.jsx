@@ -48,12 +48,14 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
     });
   };
 
-  const addExtra = (extra) =>
+  const addExtra = (extra) => {
     setToday({
       ...today,
       extras: [...today.extras, extra],
       tasks: [...today.tasks, { ...extra, done: false }],
     });
+    setSnack({ message: t(lang, "taskAdded") });
+  };
 
   const finish = () => {
     if (!confirmFinish) {

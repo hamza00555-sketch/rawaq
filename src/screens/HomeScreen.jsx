@@ -5,10 +5,12 @@ import { press } from "../press.js";
 import ProgressRing from "../components/ProgressRing.jsx";
 import RawaqLogo from "../components/RawaqLogo.jsx";
 import CreateTaskSheet from "../components/CreateTaskSheet.jsx";
+import Snackbar from "../components/Snackbar.jsx";
 import Icon from "../components/Icons.jsx";
 
 export default function HomeScreen({ lang, owner, today, rooms, setRooms, history, onShare, nextVisit }) {
   const [createOpen, setCreateOpen] = useState(false);
+  const [snack, setSnack] = useState(null);
 
   const total = today.tasks.length;
   const done = today.tasks.filter((x) => x.done).length;
@@ -78,7 +80,10 @@ export default function HomeScreen({ lang, owner, today, rooms, setRooms, histor
         lang={lang}
         rooms={rooms}
         setRooms={setRooms}
+        onAdded={() => setSnack({ message: t(lang, "taskAdded") })}
       />
+
+      <Snackbar snack={snack} onDismiss={() => setSnack(null)} />
     </div>
   );
 }
