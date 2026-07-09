@@ -4,6 +4,7 @@ import { EMOJI_PRESETS, ROOM_TYPES } from "../data.js";
 import { press } from "../press.js";
 import BottomSheet from "./BottomSheet.jsx";
 import Icon from "./Icons.jsx";
+import TrilingualNameFields from "./TrilingualNameFields.jsx";
 
 const TYPE_KEY = {
   kitchen: "typeKitchen",
@@ -52,26 +53,17 @@ export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onD
   return (
     <BottomSheet open={open} onClose={onClose} title={room ? t(lang, "editRoom") : t(lang, "addRoom")}>
       <div className="stack">
-        <input
-          className="input"
-          dir="rtl"
-          value={nameAr}
-          onChange={(e) => setNameAr(e.target.value)}
-          placeholder={t(lang, "roomNameAr")}
-        />
-        <input
-          className="input"
-          dir="ltr"
-          value={nameEn}
-          onChange={(e) => setNameEn(e.target.value)}
-          placeholder={t(lang, "roomNameEn")}
-        />
-        <input
-          className="input"
-          dir="ltr"
-          value={nameFil}
-          onChange={(e) => setNameFil(e.target.value)}
-          placeholder={t(lang, "roomNameFil")}
+        <TrilingualNameFields
+          key={`${open}-${room?.id || "new"}`}
+          lang={lang}
+          ar={nameAr}
+          en={nameEn}
+          fil={nameFil}
+          onAr={setNameAr}
+          onEn={setNameEn}
+          onFil={setNameFil}
+          placeholders={{ ar: "roomNameAr", en: "roomNameEn", fil: "roomNameFil" }}
+          initialAr={room?.name.ar || ""}
         />
 
         <span className="muted">{t(lang, "roomType")}</span>

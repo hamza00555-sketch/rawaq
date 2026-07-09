@@ -4,6 +4,7 @@ import { press } from "../press.js";
 import BottomSheet from "./BottomSheet.jsx";
 import FreqDepthPicker from "./FreqDepthPicker.jsx";
 import Icon from "./Icons.jsx";
+import TrilingualNameFields from "./TrilingualNameFields.jsx";
 
 // Edit an existing room task: trilingual name + freq + depth + delete.
 export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDelete }) {
@@ -42,9 +43,18 @@ export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDel
   return (
     <BottomSheet open={open} onClose={onClose} title={t(lang, "editTask")}>
       <div className="stack">
-        <input className="input" dir="rtl" value={nameAr} onChange={(e) => setNameAr(e.target.value)} placeholder={t(lang, "taskNameAr")} />
-        <input className="input" dir="ltr" value={nameEn} onChange={(e) => setNameEn(e.target.value)} placeholder={t(lang, "taskNameEn")} />
-        <input className="input" dir="ltr" value={nameFil} onChange={(e) => setNameFil(e.target.value)} placeholder={t(lang, "taskNameFil")} />
+        <TrilingualNameFields
+          key={`${open}-${task.id}`}
+          lang={lang}
+          ar={nameAr}
+          en={nameEn}
+          fil={nameFil}
+          onAr={setNameAr}
+          onEn={setNameEn}
+          onFil={setNameFil}
+          placeholders={{ ar: "taskNameAr", en: "taskNameEn", fil: "taskNameFil" }}
+          initialAr={task.name.ar}
+        />
 
         <FreqDepthPicker lang={lang} freq={freq} setFreq={setFreq} depth={depth} setDepth={setDepth} />
 

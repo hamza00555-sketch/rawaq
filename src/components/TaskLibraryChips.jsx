@@ -3,6 +3,7 @@ import { t } from "../i18n.js";
 import { TASK_LIBRARY } from "../data.js";
 import { press } from "../press.js";
 import Icon from "./Icons.jsx";
+import TrilingualNameFields from "./TrilingualNameFields.jsx";
 
 // Suggested tasks for a room type: one tap adds. Already-added names are
 // hidden. A "write custom task" row expands the trilingual inputs.
@@ -61,26 +62,15 @@ export default function TaskLibraryChips({ lang, roomType, existingArNames, onPi
 
       {customOpen && (
         <div className="stack">
-          <input
-            className="input"
-            dir="rtl"
-            value={nameAr}
-            onChange={(e) => setNameAr(e.target.value)}
-            placeholder={t(lang, "taskNameAr")}
-          />
-          <input
-            className="input"
-            dir="ltr"
-            value={nameEn}
-            onChange={(e) => setNameEn(e.target.value)}
-            placeholder={t(lang, "taskNameEn")}
-          />
-          <input
-            className="input"
-            dir="ltr"
-            value={nameFil}
-            onChange={(e) => setNameFil(e.target.value)}
-            placeholder={t(lang, "taskNameFil")}
+          <TrilingualNameFields
+            lang={lang}
+            ar={nameAr}
+            en={nameEn}
+            fil={nameFil}
+            onAr={setNameAr}
+            onEn={setNameEn}
+            onFil={setNameFil}
+            placeholders={{ ar: "taskNameAr", en: "taskNameEn", fil: "taskNameFil" }}
           />
           <button
             type="button"

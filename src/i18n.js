@@ -141,6 +141,7 @@ export const T = {
     blockHeight: "الطول",
     door: "الباب",
     doorNone: "بلا",
+    translating: "جارٍ الترجمة تلقائياً…",
   },
   en: {
     appName: "Rawaq",
@@ -278,6 +279,7 @@ export const T = {
     blockHeight: "Height",
     door: "Door",
     doorNone: "None",
+    translating: "Translating…",
   },
   fil: {
     appName: "Rawaq",
@@ -415,6 +417,7 @@ export const T = {
     blockHeight: "Haba",
     door: "Pinto",
     doorNone: "Wala",
+    translating: "Isinasalin…",
   },
 };
 
