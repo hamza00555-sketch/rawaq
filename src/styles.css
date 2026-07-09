@@ -1328,3 +1328,12 @@ select.input { appearance: auto; }
 .house-map.fit .map-emoji { font-size: 20px; }
 .house-map.fit .map-name { font-size: 11px; }
 .house-map.fit .map-priority { min-width: 16px; height: 16px; font-size: 10.5px; }
+
+/* Worker drill-in: the tapped room's photo above its tasks */
+.worker-room-photo {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border);
+}

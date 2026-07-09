@@ -37,6 +37,17 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
     // Firestore rules only whitelist top-level doc keys, so this needs no
     // rules change. Worker updates still touch only {tasks, updatedAt}.
     const { cols, rows, blocks } = sanitizeMap(houseMap, rooms);
+    // Ride room photos to the worker, but only for placed rooms (the ones
+    // she can tap on the map) and within a byte budget so the whole doc
+    // stays under Firestore's 1MB limit. Photos are already compressed on
+    // upload; oldest-priority rooms win the budget.
+    let photoBudget = 700_000;
+    const photoFor = (r) => {
+      if (!r.photo || !blocks[r.id]) return null;
+      if (r.photo.length > photoBudget) return null;
+      photoBudget -= r.photo.length;
+      return r.photo;
+    };
     const roomsMeta = Object.fromEntries([
       // grid dimensions ride as a pseudo-entry (no layout → renderers skip it)
       ["__grid", { cols, rows }],
@@ -44,7 +55,7 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
       ["__prefs", { lang: workerLang || "fil" }],
       ...rooms.map((r, i) => [
         r.id,
-        { name: r.name, emoji: r.emoji, type: r.type || "general", layout: blocks[r.id] || null, priority: i + 1 },
+        { name: r.name, emoji: r.emoji, type: r.type || "general", layout: blocks[r.id] || null, priority: i + 1, photo: photoFor(r) },
       ]),
       // Hallways: map-only pseudo-rooms — no tasks ever reference these ids
       ...Object.keys(blocks)

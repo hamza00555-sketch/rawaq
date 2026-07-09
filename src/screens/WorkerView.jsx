@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { t, WORKER_LANGS } from "../i18n.js";
 import { formatDate } from "../data.js";
 import { press } from "../press.js";
@@ -17,6 +17,12 @@ export default function WorkerView({ payload, shortId }) {
   const [roomsMeta, setRoomsMeta] = useState(payload?.rooms || null);
   const [status, setStatus] = useState(payload ? "ready" : "loading");
   const [selectedRoomId, setSelectedRoomId] = useState(null);
+  const focusRef = useRef(null);
+
+  // Tapping a room on the map brings its tasks (and photo) up into view.
+  useEffect(() => {
+    if (selectedRoomId) focusRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selectedRoomId]);
 
   useEffect(() => {
     if (!shortId) return;
@@ -184,6 +190,7 @@ export default function WorkerView({ payload, shortId }) {
 
         {selectedRoomId && (
           <button
+            ref={focusRef}
             type="button"
             className="btn btn-soft"
             style={{ marginBottom: 12 }}
@@ -200,6 +207,9 @@ export default function WorkerView({ payload, shortId }) {
                 <h2 className="worker-group-title">
                   {group.meta ? `${group.meta.emoji} ${nm(group.meta.name)}` : tw("otherTasks")}
                 </h2>
+                {selectedRoomId === group.roomId && group.meta?.photo && (
+                  <img src={group.meta.photo} alt="" className="worker-room-photo" />
+                )}
                 {group.tasks.map(renderTask)}
               </section>
             ) : (
