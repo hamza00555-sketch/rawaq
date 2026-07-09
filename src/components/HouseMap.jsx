@@ -24,12 +24,13 @@ export function BlockContent({ emoji, name, priority }) {
 // The canvas is always LTR: a floor plan is spatial, not text — it must
 // not mirror when the UI language flips between Arabic and English.
 // entries: [{id, rect, emoji, name, type, priority, done, dimmed}]
+// (rect may carry door: n|e|s|w; type "hall" blocks are never tappable)
 export default function HouseMap({ entries, selectedId, onTapRoom }) {
   return (
     <div className="house-map" dir="ltr">
       {entries.map((entry) => {
         const small = entry.rect.w === 1 || entry.rect.h === 1;
-        const tappable = !!onTapRoom && !entry.dimmed;
+        const tappable = !!onTapRoom && !entry.dimmed && entry.type !== "hall";
         const cls = [
           "map-block",
           `type-${entry.type || "general"}`,
@@ -52,6 +53,7 @@ export default function HouseMap({ entries, selectedId, onTapRoom }) {
             {...(tappable ? press(() => onTapRoom(entry.id)) : {})}
           >
             <BlockContent emoji={entry.emoji} name={entry.name} priority={entry.priority} />
+            {entry.rect.door && <span className={`map-door door-${entry.rect.door}`} aria-hidden="true" />}
           </button>
         );
       })}

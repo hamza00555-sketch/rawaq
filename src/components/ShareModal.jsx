@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { t } from "../i18n.js";
 import { taskFingerprint, todayStr } from "../data.js";
-import { sanitizeMap } from "../houseMap.js";
+import { isHall, sanitizeMap } from "../houseMap.js";
 import { createShare, shareIdFromLink } from "../shares.js";
 import BottomSheet from "./BottomSheet.jsx";
 import QRCanvas from "./QRCanvas.jsx";
@@ -31,12 +31,25 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
     // Firestore rules only whitelist top-level doc keys, so this needs no
     // rules change. Worker updates still touch only {tasks, updatedAt}.
     const { blocks } = sanitizeMap(houseMap, rooms);
-    const roomsMeta = Object.fromEntries(
-      rooms.map((r, i) => [
+    const roomsMeta = Object.fromEntries([
+      ...rooms.map((r, i) => [
         r.id,
         { name: r.name, emoji: r.emoji, type: r.type || "general", layout: blocks[r.id] || null, priority: i + 1 },
-      ])
-    );
+      ]),
+      // Hallways: map-only pseudo-rooms — no tasks ever reference these ids
+      ...Object.keys(blocks)
+        .filter(isHall)
+        .map((id) => [
+          id,
+          {
+            name: { ar: "ممر", en: "Hallway", fil: "Pasilyo" },
+            emoji: "",
+            type: "hall",
+            layout: blocks[id],
+            priority: null,
+          },
+        ]),
+    ]);
     createShare({ date: today.date, owner, tasks: today.tasks, rooms: roomsMeta })
       .then((link) => {
         if (!openRef.current) return;

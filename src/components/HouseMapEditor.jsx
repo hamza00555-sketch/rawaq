@@ -8,9 +8,9 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 // handle to resize, tap the ✕ chip to unplace. The grid is a no-scroll
 // island (touch-action none), so dragging starts immediately — no
 // long-press needed. Geometry is committed on pointerup only; an
-// overlapping drop tints red and reverts.
-export default function HouseMapEditor({ entries, blocks, onChange }) {
-  const [selected, setSelected] = useState(null);
+// overlapping drop tints red and reverts. Selection is controlled by the
+// parent, which shows a size/door toolbar for the selected block.
+export default function HouseMapEditor({ entries, blocks, onChange, selected, setSelected }) {
   const [draft, setDraft] = useState(null); // {id, rect, valid}
   const gesture = useRef(null);
   const gridRef = useRef(null);
@@ -44,18 +44,17 @@ export default function HouseMapEditor({ entries, blocks, onChange }) {
     // Rect-relative cell math — safe under the large-UI zoom.
     const dCol = Math.round((e.clientX - g.startX) / (grid.width / GRID_COLS));
     const dRow = Math.round((e.clientY - g.startY) / (grid.height / GRID_ROWS));
+    // spread orig first: keeps non-geometry fields (door) through commits
     let rect;
     if (g.mode === "move") {
       rect = {
+        ...g.orig,
         x: clamp(g.orig.x + dCol, 0, GRID_COLS - g.orig.w),
         y: clamp(g.orig.y + dRow, 0, GRID_ROWS - g.orig.h),
-        w: g.orig.w,
-        h: g.orig.h,
       };
     } else {
       rect = {
-        x: g.orig.x,
-        y: g.orig.y,
+        ...g.orig,
         w: clamp(g.orig.w + dCol, 1, GRID_COLS - g.orig.x),
         h: clamp(g.orig.h + dRow, 1, GRID_ROWS - g.orig.y),
       };
@@ -106,10 +105,9 @@ export default function HouseMapEditor({ entries, blocks, onChange }) {
     setSelected(entry.id);
     const b = blocks[entry.id];
     const rect = {
+      ...b,
       x: clamp(b.x + delta[0], 0, GRID_COLS - b.w),
       y: clamp(b.y + delta[1], 0, GRID_ROWS - b.h),
-      w: b.w,
-      h: b.h,
     };
     if (!collides(blocks, entry.id, rect)) onChange({ ...blocks, [entry.id]: rect });
   };
@@ -153,6 +151,7 @@ export default function HouseMapEditor({ entries, blocks, onChange }) {
             onKeyDown={moveByKey(entry)}
           >
             <BlockContent emoji={entry.emoji} name={entry.name} priority={entry.priority} />
+            {rect.door && <span className={`map-door door-${rect.door}`} aria-hidden="true" />}
             {isSelected && !dragging && (
               <button
                 type="button"

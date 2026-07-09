@@ -104,7 +104,7 @@ export default function WorkerView({ payload, shortId }) {
           type: m.type || "general",
           priority: m.priority,
           done: roomDone(tasks, roomId),
-          dimmed: !tasks.some((x) => x.roomId === roomId),
+          dimmed: m.type !== "hall" && !tasks.some((x) => x.roomId === roomId),
         }))
     : [];
 

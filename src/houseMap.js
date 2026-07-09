@@ -9,6 +9,16 @@ export const GRID_ROWS = 8;
 
 export const EMPTY_MAP = { blocks: {} };
 
+// Hallways are map-only blocks (no tasks, no priority). They live in the
+// same blocks map as rooms, under a reserved id prefix, so collision and
+// share plumbing work unchanged.
+export const HALL_PREFIX = "hall-";
+export const isHall = (id) => id.startsWith(HALL_PREFIX);
+export const newHallId = () => `${HALL_PREFIX}${Date.now().toString(36)}`;
+
+// A door sits on one side of a block: n/e/s/w (map is always LTR).
+export const DOOR_SIDES = ["n", "e", "s", "w"];
+
 export function clampRect(rect) {
   const w = Math.max(1, Math.min(GRID_COLS, Math.round(rect.w)));
   const h = Math.max(1, Math.min(GRID_ROWS, Math.round(rect.h)));
@@ -37,15 +47,17 @@ export function findFreeSpot(blocks, w, h) {
   return null;
 }
 
-// Drop blocks for rooms that no longer exist and clamp stray geometry.
-// Pure + idempotent — safe to run on every read instead of migrating.
+// Drop blocks for rooms that no longer exist (halls always stay), clamp
+// stray geometry, and whitelist the door field. Pure + idempotent — safe
+// to run on every read instead of migrating.
 export function sanitizeMap(map, rooms) {
   const blocks = map?.blocks || {};
   const ids = new Set(rooms.map((r) => r.id));
   const clean = {};
   for (const [id, b] of Object.entries(blocks)) {
-    if (!ids.has(id) || !b) continue;
+    if ((!ids.has(id) && !isHall(id)) || !b) continue;
     const rect = clampRect(b);
+    if (DOOR_SIDES.includes(b.door)) rect.door = b.door;
     // A clamped block that now overlaps an earlier one is dropped rather
     // than shuffled — the room just returns to the unplaced tray.
     if (!collides(clean, id, rect)) clean[id] = rect;

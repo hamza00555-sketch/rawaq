@@ -135,6 +135,12 @@ export const T = {
     mapFull: "الخريطة ممتلئة — صغّري غرفة أولاً",
     allRooms: "الكل",
     tapRoomOnMap: "اضغطي على غرفة في الخريطة لعرض مهامها",
+    hall: "ممر",
+    addHall: "إضافة ممر",
+    blockWidth: "العرض",
+    blockHeight: "الطول",
+    door: "الباب",
+    doorNone: "بلا",
   },
   en: {
     appName: "Rawaq",
@@ -266,6 +272,12 @@ export const T = {
     mapFull: "The map is full — shrink a room first",
     allRooms: "All",
     tapRoomOnMap: "Tap a room on the map to see its tasks",
+    hall: "Hallway",
+    addHall: "Add hallway",
+    blockWidth: "Width",
+    blockHeight: "Height",
+    door: "Door",
+    doorNone: "None",
   },
   fil: {
     appName: "Rawaq",
@@ -397,6 +409,12 @@ export const T = {
     mapFull: "Puno na ang mapa — paliitin muna ang isang kwarto",
     allRooms: "Lahat",
     tapRoomOnMap: "I-tap ang kwarto sa mapa para makita ang mga gawain",
+    hall: "Pasilyo",
+    addHall: "Magdagdag ng pasilyo",
+    blockWidth: "Lapad",
+    blockHeight: "Haba",
+    door: "Pinto",
+    doorNone: "Wala",
   },
 };
 
