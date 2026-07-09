@@ -995,17 +995,23 @@ select.input { appearance: auto; }
 }
 
 .map-block .map-emoji { font-size: 24px; line-height: 1; pointer-events: none; }
-.map-block.small .map-emoji { font-size: 18px; }
+.map-block.small .map-emoji { font-size: 16px; }
+/* Every room shows its name — wrap to 2 lines and shrink on tight blocks
+   rather than hiding it. */
 .map-block .map-name {
   font-size: 12px;
   font-weight: 700;
+  line-height: 1.1;
   max-width: 100%;
-  white-space: nowrap;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
   pointer-events: none;
 }
-.map-block.small .map-name { display: none; }
+.map-block.small .map-name { font-size: 9.5px; }
 
 /* Soft tints per room type */
 .map-block.type-kitchen { background: rgba(251, 146, 60, 0.16); border-color: rgba(251, 146, 60, 0.35); }
@@ -1104,7 +1110,7 @@ select.input { appearance: auto; }
 .house-map.dense-1 .map-block .map-name { font-size: 11px; }
 .house-map.dense-1 .map-priority { min-width: 16px; height: 16px; font-size: 10.5px; }
 .house-map.dense-2 .map-block .map-emoji { font-size: 14px; }
-.house-map.dense-2 .map-block .map-name { display: none; }
+.house-map.dense-2 .map-block .map-name { font-size: 9px; }
 .house-map.dense-2 .map-priority { min-width: 14px; height: 14px; font-size: 9.5px; top: 2px; right: 2px; }
 
 .map-priority {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { t } from "../i18n.js";
 import { taskFingerprint, todayStr } from "../data.js";
 import { isHall, sanitizeMap } from "../houseMap.js";
+import { compressImage } from "../image.js";
 import { createShare, shareIdFromLink } from "../shares.js";
 import BottomSheet from "./BottomSheet.jsx";
 import QRCanvas from "./QRCanvas.jsx";
@@ -16,7 +17,7 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
   // Short link via Firestore; unchanged tasks reuse the existing link so
   // mom's live listener and the worker stay on one doc. On failure: clear
   // error + retry — never the huge legacy hash link.
-  const prepare = useCallback(() => {
+  const prepare = useCallback(async () => {
     if (!today) return;
     setCopied(false);
 
@@ -37,17 +38,24 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
     // Firestore rules only whitelist top-level doc keys, so this needs no
     // rules change. Worker updates still touch only {tasks, updatedAt}.
     const { cols, rows, blocks } = sanitizeMap(houseMap, rooms);
-    // Ride room photos to the worker, but only for placed rooms (the ones
-    // she can tap on the map) and within a byte budget so the whole doc
-    // stays under Firestore's 1MB limit. Photos are already compressed on
-    // upload; oldest-priority rooms win the budget.
-    let photoBudget = 700_000;
-    const photoFor = (r) => {
-      if (!r.photo || !blocks[r.id]) return null;
-      if (r.photo.length > photoBudget) return null;
-      photoBudget -= r.photo.length;
-      return r.photo;
-    };
+    // Ride room photos to the worker, but only for placed rooms (tappable
+    // on the map). Each is re-compressed to a small thumbnail at share
+    // time — this works for older uncompressed photos too — and a byte
+    // budget keeps the whole doc under Firestore's 1MB limit (oldest-
+    // priority rooms win).
+    let photoBudget = 720_000;
+    const placed = rooms.filter((r) => r.photo && blocks[r.id]);
+    const thumbs = await Promise.all(placed.map((r) => compressImage(r.photo, 560, 0.6).catch(() => null)));
+    const photoById = {};
+    placed.forEach((r, i) => {
+      const thumb = thumbs[i];
+      if (thumb && thumb.length <= photoBudget) {
+        photoById[r.id] = thumb;
+        photoBudget -= thumb.length;
+      }
+    });
+    if (!openRef.current) return;
+
     const roomsMeta = Object.fromEntries([
       // grid dimensions ride as a pseudo-entry (no layout → renderers skip it)
       ["__grid", { cols, rows }],
@@ -55,7 +63,7 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
       ["__prefs", { lang: workerLang || "fil" }],
       ...rooms.map((r, i) => [
         r.id,
-        { name: r.name, emoji: r.emoji, type: r.type || "general", layout: blocks[r.id] || null, priority: i + 1, photo: photoFor(r) },
+        { name: r.name, emoji: r.emoji, type: r.type || "general", layout: blocks[r.id] || null, priority: i + 1, photo: photoById[r.id] || null },
       ]),
       // Hallways: map-only pseudo-rooms — no tasks ever reference these ids
       ...Object.keys(blocks)
