@@ -13,6 +13,7 @@ export default function TaskLibraryChips({ lang, roomType, existingArNames, onPi
   const [nameAr, setNameAr] = useState("");
   const [nameEn, setNameEn] = useState("");
   const [nameFil, setNameFil] = useState("");
+  const [nameId, setNameId] = useState("");
 
   const taken = new Set([...existingArNames].map((x) => x.trim()));
   const suggestions = (TASK_LIBRARY[roomType] || TASK_LIBRARY.general).filter(
@@ -24,12 +25,13 @@ export default function TaskLibraryChips({ lang, roomType, existingArNames, onPi
   const submitCustom = async () => {
     if (!nameAr.trim() || saving) return;
     setSaving(true);
-    const name = await finalizeName(nameAr, nameEn, nameFil);
+    const name = await finalizeName(nameAr, nameEn, nameFil, nameId);
     setSaving(false);
     onCustom(name);
     setNameAr("");
     setNameEn("");
     setNameFil("");
+    setNameId("");
     setCustomOpen(false);
   };
 
@@ -69,10 +71,12 @@ export default function TaskLibraryChips({ lang, roomType, existingArNames, onPi
             ar={nameAr}
             en={nameEn}
             fil={nameFil}
+            id={nameId}
             onAr={setNameAr}
             onEn={setNameEn}
             onFil={setNameFil}
-            placeholders={{ ar: "taskNameAr", en: "taskNameEn", fil: "taskNameFil" }}
+            onId={setNameId}
+            placeholders={{ ar: "taskNameAr", en: "taskNameEn", fil: "taskNameFil", id: "taskNameId" }}
           />
           <button
             type="button"

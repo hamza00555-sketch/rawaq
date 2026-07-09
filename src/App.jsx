@@ -52,6 +52,7 @@ function MainApp() {
   const [taskLog, setTaskLog] = useStoredState(STORAGE_KEYS.taskLog, {});
   const [contract, setContract] = useStoredState(STORAGE_KEYS.contract, null);
   const [houseMap, setHouseMap] = useStoredState(STORAGE_KEYS.houseMap, { blocks: {} });
+  const [workerLang, setWorkerLang] = useStoredState(STORAGE_KEYS.workerLang, "fil");
 
   const [tab, setTab] = useState("home");
   const [splash, setSplash] = useState(true);
@@ -204,6 +205,8 @@ function MainApp() {
           setContract={setContract}
           uiSize={uiSize}
           setUiSize={setUiSize}
+          workerLang={workerLang}
+          setWorkerLang={setWorkerLang}
         />
       )}
 
@@ -230,6 +233,7 @@ function MainApp() {
         owner={owner}
         rooms={rooms}
         houseMap={houseMap}
+        workerLang={workerLang}
         lastShare={lastShare}
         onShared={setLastShare}
       />

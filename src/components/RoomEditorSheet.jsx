@@ -21,6 +21,7 @@ export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onD
   const [nameAr, setNameAr] = useState("");
   const [nameEn, setNameEn] = useState("");
   const [nameFil, setNameFil] = useState("");
+  const [nameId, setNameId] = useState("");
   const [emoji, setEmoji] = useState(EMOJI_PRESETS[0]);
   const [type, setType] = useState("general");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -30,6 +31,7 @@ export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onD
     setNameAr(room?.name.ar || "");
     setNameEn(room?.name.en || "");
     setNameFil(room?.name.fil || "");
+    setNameId(room?.name.id || "");
     setEmoji(room?.emoji || EMOJI_PRESETS[0]);
     setType(room?.type || "general");
     setConfirmDelete(false);
@@ -41,7 +43,7 @@ export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onD
   const save = async () => {
     if (!canSave || saving) return;
     setSaving(true);
-    const name = await finalizeName(nameAr, nameEn, nameFil);
+    const name = await finalizeName(nameAr, nameEn, nameFil, nameId);
     setSaving(false);
     onSave({ name, emoji, type });
     onClose();
@@ -56,10 +58,12 @@ export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onD
           ar={nameAr}
           en={nameEn}
           fil={nameFil}
+          id={nameId}
           onAr={setNameAr}
           onEn={setNameEn}
           onFil={setNameFil}
-          placeholders={{ ar: "roomNameAr", en: "roomNameEn", fil: "roomNameFil" }}
+          onId={setNameId}
+          placeholders={{ ar: "roomNameAr", en: "roomNameEn", fil: "roomNameFil", id: "roomNameId" }}
           initialAr={room?.name.ar || ""}
         />
 

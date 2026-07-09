@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { t } from "../i18n.js";
+import { t, WORKER_LANGS } from "../i18n.js";
 import { formatDate } from "../data.js";
 import { press } from "../press.js";
 import { fetchShare, updateShareTasks } from "../shares.js";
@@ -38,6 +38,13 @@ export default function WorkerView({ payload, shortId }) {
       cancelled = true;
     };
   }, [shortId]);
+
+  // Display language mom picked in Settings, carried in the share doc.
+  // Legacy shares / payloads without __prefs default to Filipino.
+  const wlang = (roomsMeta?.__prefs?.lang && WORKER_LANGS[roomsMeta.__prefs.lang]) ? roomsMeta.__prefs.lang : "fil";
+  const wdir = WORKER_LANGS[wlang].dir;
+  const tw = (key) => t(wlang, key);
+  const nm = (name) => name[wlang] || name.fil || name.ar;
 
   const total = tasks.length;
   const done = tasks.filter((x) => x.done).length;
@@ -102,7 +109,7 @@ export default function WorkerView({ payload, shortId }) {
           id: roomId,
           rect: m.layout,
           emoji: m.emoji,
-          name: m.name.fil || m.name.ar,
+          name: nm(m.name),
           type: m.type || "general",
           priority: m.priority,
           done: roomDone(tasks, roomId),
@@ -125,26 +132,26 @@ export default function WorkerView({ payload, shortId }) {
       <span className="task-check" aria-hidden="true">
         <Icon name="check" size="0.75em" strokeWidth={3} style={{ verticalAlign: 0 }} />
       </span>
-      <span className="task-name">{task.name.fil || task.name.ar}</span>
+      <span className="task-name">{nm(task.name)}</span>
     </button>
   );
 
   return (
-    <div className="app rawaq-worker" dir="ltr" lang="fil">
+    <div className="app rawaq-worker" dir={wdir} lang={wlang === "fil" ? "fil" : wlang}>
       <div className="screen" style={{ paddingBottom: 30 }}>
         <header className="appbar">
           <div className="row">
             <RawaqLogo size={38} />
             <div>
-              <h1 style={{ fontSize: 20 }}>{t("fil", "workerHeader")}</h1>
-              <p className="muted" style={{ fontSize: 13 }}>{date ? formatDate("fil", date) : ""}</p>
+              <h1 style={{ fontSize: 20 }}>{tw("workerHeader")}</h1>
+              <p className="muted" style={{ fontSize: 13 }}>{date ? formatDate(wlang, date) : ""}</p>
             </div>
           </div>
         </header>
 
         <div className="card" style={{ marginBottom: 18 }}>
           <div className="row spread" style={{ marginBottom: 10 }}>
-            <strong style={{ fontSize: 18 }}>{t("fil", "progress")}</strong>
+            <strong style={{ fontSize: 18 }}>{tw("progress")}</strong>
             <strong style={{ fontSize: 18, color: "var(--primary)" }}>
               {done}/{total} · {percent}%
             </strong>
@@ -156,7 +163,7 @@ export default function WorkerView({ payload, shortId }) {
 
         {complete && (
           <div className="card center-text congrats celebrate-pop" style={{ marginBottom: 18, fontSize: 22 }} role="status">
-            {t("fil", "workerCongrats")}
+            {tw("workerCongrats")}
           </div>
         )}
 
@@ -170,7 +177,7 @@ export default function WorkerView({ payload, shortId }) {
               onTapRoom={(id) => setSelectedRoomId(id === selectedRoomId ? null : id)}
             />
             <p className="muted center-text" style={{ fontSize: 13, marginTop: 8 }}>
-              {t("fil", "tapRoomOnMap")}
+              {tw("tapRoomOnMap")}
             </p>
           </div>
         )}
@@ -182,7 +189,7 @@ export default function WorkerView({ payload, shortId }) {
             style={{ marginBottom: 12 }}
             {...press(() => setSelectedRoomId(null))}
           >
-            <Icon name="chevron-left" size={18} /> {t("fil", "allRooms")}
+            <Icon name="chevron-left" size={18} /> {tw("allRooms")}
           </button>
         )}
 
@@ -191,7 +198,7 @@ export default function WorkerView({ payload, shortId }) {
             group.meta || group.roomId === "__other" ? (
               <section key={group.roomId} className="stack" style={{ gap: 10 }}>
                 <h2 className="worker-group-title">
-                  {group.meta ? `${group.meta.emoji} ${group.meta.name.fil || group.meta.name.ar}` : t("fil", "otherTasks")}
+                  {group.meta ? `${group.meta.emoji} ${nm(group.meta.name)}` : tw("otherTasks")}
                 </h2>
                 {group.tasks.map(renderTask)}
               </section>

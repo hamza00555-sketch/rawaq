@@ -12,6 +12,7 @@ export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDel
   const [nameAr, setNameAr] = useState("");
   const [nameEn, setNameEn] = useState("");
   const [nameFil, setNameFil] = useState("");
+  const [nameId, setNameId] = useState("");
   const [freq, setFreq] = useState("weekly");
   const [depth, setDepth] = useState("surface");
   const [saving, setSaving] = useState(false);
@@ -21,6 +22,7 @@ export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDel
     setNameAr(task.name.ar);
     setNameEn(task.name.en);
     setNameFil(task.name.fil);
+    setNameId(task.name.id || "");
     setFreq(task.freq || "weekly");
     setDepth(task.depth || "surface");
   }, [open, task]);
@@ -30,7 +32,7 @@ export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDel
   const save = async () => {
     if (!nameAr.trim() || saving) return;
     setSaving(true);
-    const name = await finalizeName(nameAr, nameEn, nameFil);
+    const name = await finalizeName(nameAr, nameEn, nameFil, nameId);
     setSaving(false);
     onSave({ ...task, name, freq, depth });
     onClose();
@@ -45,10 +47,12 @@ export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDel
           ar={nameAr}
           en={nameEn}
           fil={nameFil}
+          id={nameId}
           onAr={setNameAr}
           onEn={setNameEn}
           onFil={setNameFil}
-          placeholders={{ ar: "taskNameAr", en: "taskNameEn", fil: "taskNameFil" }}
+          onId={setNameId}
+          placeholders={{ ar: "taskNameAr", en: "taskNameEn", fil: "taskNameFil", id: "taskNameId" }}
           initialAr={task.name.ar}
         />
 

@@ -7,7 +7,7 @@ import BottomSheet from "./BottomSheet.jsx";
 import QRCanvas from "./QRCanvas.jsx";
 import Icon from "./Icons.jsx";
 
-export default function ShareModal({ open, onClose, lang, today, owner, rooms, houseMap, lastShare, onShared }) {
+export default function ShareModal({ open, onClose, lang, today, owner, rooms, houseMap, workerLang, lastShare, onShared }) {
   const [copied, setCopied] = useState(false);
   const [state, setState] = useState({ status: "loading", link: "" });
   const openRef = useRef(open);
@@ -21,7 +21,13 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
     setCopied(false);
 
     const fingerprint = taskFingerprint(today.tasks);
-    if (lastShare?.link && lastShare.date === todayStr() && lastShare.fingerprint === fingerprint) {
+    const wl = workerLang || "fil";
+    if (
+      lastShare?.link &&
+      lastShare.date === todayStr() &&
+      lastShare.fingerprint === fingerprint &&
+      (lastShare.workerLang || "fil") === wl
+    ) {
       setState({ status: "short", link: lastShare.link });
       return;
     }
@@ -34,6 +40,8 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
     const roomsMeta = Object.fromEntries([
       // grid dimensions ride as a pseudo-entry (no layout → renderers skip it)
       ["__grid", { cols, rows }],
+      // worker preferences (chosen display language) — also layout-less
+      ["__prefs", { lang: workerLang || "fil" }],
       ...rooms.map((r, i) => [
         r.id,
         { name: r.name, emoji: r.emoji, type: r.type || "general", layout: blocks[r.id] || null, priority: i + 1 },
@@ -44,7 +52,7 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
         .map((id) => [
           id,
           {
-            name: { ar: "ممر", en: "Hallway", fil: "Pasilyo" },
+            name: { ar: "ممر", en: "Hallway", fil: "Pasilyo", id: "Lorong" },
             emoji: "",
             type: "hall",
             layout: blocks[id],
@@ -61,6 +69,7 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
           link,
           date: today.date,
           fingerprint,
+          workerLang: wl,
           sharedAt: Date.now(),
         });
       })
@@ -68,7 +77,7 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
         if (!openRef.current) return;
         setState({ status: "error", link: "", reason: err?.code === "rules" ? "rules" : "network" });
       });
-  }, [today, owner, rooms, houseMap, lastShare, onShared]);
+  }, [today, owner, rooms, houseMap, workerLang, lastShare, onShared]);
 
   useEffect(() => {
     if (open) prepare();

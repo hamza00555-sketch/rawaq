@@ -4,6 +4,15 @@ export const LANGS = {
   fil: { label: "Filipino", dir: "ltr", flag: "🇵🇭" },
 };
 
+// Languages the WORKER's page can display (mom picks in Settings).
+// Indonesian is worker-facing only — the mom's UI stays ar/en/fil.
+export const WORKER_LANGS = {
+  ar: { label: "العربية", dir: "rtl", flag: "🇸🇦" },
+  en: { label: "English", dir: "ltr", flag: "🇬🇧" },
+  fil: { label: "Filipino", dir: "ltr", flag: "🇵🇭" },
+  id: { label: "Bahasa Indonesia", dir: "ltr", flag: "🇮🇩" },
+};
+
 export const T = {
   ar: {
     appName: "رواق",
@@ -148,6 +157,10 @@ export const T = {
     zoomOut: "تصغير (مساحة أكبر)",
     zoomBlocked: "صغّري أو حرّكي الغرف أولاً — في غرف خارج المساحة الأصغر",
     translating: "جارٍ الترجمة تلقائياً…",
+    workerLangTitle: "لغة العاملة",
+    workerLangHint: "صفحة العاملة (الرابط المشترك) ستظهر بهذه اللغة",
+    taskNameId: "Nama tugas (Bahasa Indonesia)",
+    roomNameId: "Nama kamar (Bahasa Indonesia)",
     translateFailed: "تعذرت الترجمة الآن — سنحاول مرة أخرى عند الحفظ",
   },
   en: {
@@ -293,6 +306,8 @@ export const T = {
     zoomOut: "Zoom out (more space)",
     zoomBlocked: "Shrink or move rooms first — some sit outside the smaller area",
     translating: "Translating…",
+    workerLangTitle: "Worker's language",
+    workerLangHint: "The worker's page (shared link) will show in this language",
     translateFailed: "Translation unavailable — will retry on save",
   },
   fil: {
@@ -438,7 +453,21 @@ export const T = {
     zoomOut: "Paliitin (mas malawak)",
     zoomBlocked: "Paliitin o ilipat muna ang mga kwarto",
     translating: "Isinasalin…",
+    workerLangTitle: "Wika ng kasambahay",
+    workerLangHint: "Ang page ng kasambahay ay lalabas sa wikang ito",
     translateFailed: "Hindi ma-translate ngayon — susubukan sa pag-save",
+  },
+  id: {
+    appName: "Rawaq",
+    workerHeader: "Tugas hari ini",
+    progress: "Kemajuan",
+    workerCongrats: "Kerja bagus! Semua selesai \u{1F389}",
+    loadingTasks: "Memuat tugas\u2026",
+    linkError: "Tautan tidak bisa dibuka. Minta tautan baru.",
+    otherTasks: "Tugas lainnya",
+    allRooms: "Semua",
+    tapRoomOnMap: "Ketuk kamar di peta untuk melihat tugasnya",
+    hall: "Lorong",
   },
 };
 

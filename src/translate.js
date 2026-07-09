@@ -74,17 +74,21 @@ async function translateTo(text, target) {
   }
 }
 
-// → {en, fil} (either may be "" on failure). Filipino = "tl" upstream.
+// → {en, fil, id} (any may be "" on failure). Filipino = "tl" upstream,
+// Indonesian = "id". Cache entries from before Indonesian existed lack
+// .id and are treated as misses so they refresh once.
 export async function translateAr(text) {
   const key = text.trim();
-  if (!key) return { en: "", fil: "" };
+  if (!key) return { en: "", fil: "", id: "" };
   const hit = cache()[key];
-  if (hit) return hit;
-  const [en, fil] = await Promise.allSettled([translateTo(key, "en"), translateTo(key, "tl")]).then(
-    (r) => r.map((x) => (x.status === "fulfilled" ? x.value : ""))
-  );
-  const result = { en, fil };
-  if (en && fil) remember(key, result);
+  if (hit && hit.id !== undefined) return hit;
+  const [en, fil, id] = await Promise.allSettled([
+    translateTo(key, "en"),
+    translateTo(key, "tl"),
+    translateTo(key, "id"),
+  ]).then((r) => r.map((x) => (x.status === "fulfilled" ? x.value : "")));
+  const result = { en, fil, id };
+  if (en && fil && id) remember(key, result);
   return result;
 }
 
@@ -94,40 +98,43 @@ export async function translateAr(text) {
 // — instant when the live fill already cached it, capped at 2.5s so
 // saving never feels stuck. Total failure falls back to the Arabic
 // text, the pre-feature behavior.
-export async function finalizeName(ar, en, fil) {
+export async function finalizeName(ar, en, fil, id = "") {
   ar = ar.trim();
   en = en.trim();
   fil = fil.trim();
-  if (ar && (!en || !fil)) {
+  id = id.trim();
+  if (ar && (!en || !fil || !id)) {
+    const none = { en: "", fil: "", id: "" };
     const tr = await Promise.race([
-      translateAr(ar).catch(() => ({ en: "", fil: "" })),
-      new Promise((resolve) => setTimeout(() => resolve({ en: "", fil: "" }), 2500)),
+      translateAr(ar).catch(() => none),
+      new Promise((resolve) => setTimeout(() => resolve(none), 2500)),
     ]);
     en = en || tr.en;
     fil = fil || tr.fil;
+    id = id || tr.id;
   }
-  return { ar, en: en || ar, fil: fil || ar };
+  return { ar, en: en || ar, fil: fil || ar, id: id || ar };
 }
 
 // Debounced live translation of an Arabic string as it's typed.
 // Pass "" to idle (empty input, or edit sheets before the name changes).
 export function useAutoTranslate(text) {
-  const [state, setState] = useState({ en: "", fil: "", busy: false, failed: false });
+  const [state, setState] = useState({ en: "", fil: "", id: "", busy: false, failed: false });
 
   useEffect(() => {
     const key = text.trim();
     if (!key) {
-      setState({ en: "", fil: "", busy: false, failed: false });
+      setState({ en: "", fil: "", id: "", busy: false, failed: false });
       return;
     }
     let cancelled = false;
     // Reset results, don't carry them: the text changed, so the old
     // translation is stale — and an empty→value transition guarantees
     // consumers re-apply even when the new translation is identical.
-    setState({ en: "", fil: "", busy: true, failed: false });
+    setState({ en: "", fil: "", id: "", busy: true, failed: false });
     const timer = setTimeout(() => {
-      translateAr(key).then(({ en, fil }) => {
-        if (!cancelled) setState({ en, fil, busy: false, failed: !en && !fil });
+      translateAr(key).then(({ en, fil, id }) => {
+        if (!cancelled) setState({ en, fil, id, busy: false, failed: !en && !fil && !id });
       });
     }, 500);
     return () => {

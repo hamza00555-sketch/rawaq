@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { LANGS, t } from "../i18n.js";
+import { LANGS, WORKER_LANGS, t } from "../i18n.js";
 import { contractEnd, formatDate, isContractExpired, nextVisitDate, remainingVisits, todayStr } from "../data.js";
 import { press } from "../press.js";
 import Icon from "../components/Icons.jsx";
@@ -21,7 +21,7 @@ const resetAllData = () => {
   window.location.replace(window.location.pathname);
 };
 
-export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history, contract, setContract, uiSize, setUiSize }) {
+export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history, contract, setContract, uiSize, setUiSize, workerLang, setWorkerLang }) {
   const [nameDraft, setNameDraft] = useState(owner);
   const [savedMsg, setSavedMsg] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -87,6 +87,27 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
             </button>
           </div>
         </div>
+      </div>
+
+      <h2 className="section-title">{t(lang, "workerLangTitle")}</h2>
+      <div className="card stack">
+        <div className="seg" style={{ width: "100%" }}>
+          {Object.entries(WORKER_LANGS).map(([code, meta]) => (
+            <button
+              key={code}
+              type="button"
+              className={`seg-btn ${workerLang === code ? "active" : ""}`}
+              aria-pressed={workerLang === code}
+              aria-label={meta.label}
+              {...press(() => setWorkerLang(code))}
+            >
+              {meta.flag}
+            </button>
+          ))}
+        </div>
+        <p className="muted" style={{ fontSize: 13 }}>
+          {WORKER_LANGS[workerLang]?.label} · {t(lang, "workerLangHint")}
+        </p>
       </div>
 
       <h2 className="section-title">{t(lang, "accessibility")}</h2>
