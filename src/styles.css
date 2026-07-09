@@ -1303,3 +1303,16 @@ select.input { appearance: auto; }
   min-height: 18px;
   margin: -6px 0;
 }
+
+/* Home: compact progress summary (small ring beside the counts) */
+.home-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.home-summary-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}

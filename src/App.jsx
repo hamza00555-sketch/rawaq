@@ -169,8 +169,10 @@ function MainApp() {
           today={safeToday}
           rooms={rooms}
           setRooms={setRooms}
+          houseMap={houseMap}
           history={history}
           onShare={() => setShareOpen(true)}
+          onOpenMap={() => setTab("rooms")}
           nextVisit={nextVisit}
         />
       )}

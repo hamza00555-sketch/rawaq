@@ -1,5 +1,5 @@
-export default function ProgressRing({ percent, size = 170, label, celebrate }) {
-  const stroke = 13;
+export default function ProgressRing({ percent, size = 170, label, celebrate, compact = false }) {
+  const stroke = compact ? 9 : 13;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c * (1 - percent / 100);
@@ -30,7 +30,7 @@ export default function ProgressRing({ percent, size = 170, label, celebrate }) 
         />
       </svg>
       <div className="ring-center">
-        <span className="ring-pct">{percent}%</span>
+        <span className="ring-pct" style={compact ? { fontSize: Math.round(size * 0.26) } : undefined}>{percent}%</span>
         {label && <span className="muted">{label}</span>}
       </div>
     </div>
