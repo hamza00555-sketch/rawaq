@@ -5,6 +5,7 @@ import { press } from "../press.js";
 import BottomSheet from "./BottomSheet.jsx";
 import Icon from "./Icons.jsx";
 import TrilingualNameFields from "./TrilingualNameFields.jsx";
+import { finalizeName } from "../translate.js";
 
 const TYPE_KEY = {
   kitchen: "typeKitchen",
@@ -34,19 +35,15 @@ export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onD
     setConfirmDelete(false);
   }, [open, room]);
 
+  const [saving, setSaving] = useState(false);
   const canSave = nameAr.trim();
 
-  const save = () => {
-    if (!canSave) return;
-    onSave({
-      name: {
-        ar: nameAr.trim(),
-        en: nameEn.trim() || nameAr.trim(),
-        fil: nameFil.trim() || nameAr.trim(),
-      },
-      emoji,
-      type,
-    });
+  const save = async () => {
+    if (!canSave || saving) return;
+    setSaving(true);
+    const name = await finalizeName(nameAr, nameEn, nameFil);
+    setSaving(false);
+    onSave({ name, emoji, type });
     onClose();
   };
 
@@ -100,11 +97,11 @@ export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onD
         <button
           type="button"
           className="btn btn-primary btn-block"
-          disabled={!canSave}
-          style={!canSave ? { opacity: 0.5 } : undefined}
+          disabled={!canSave || saving}
+          style={!canSave || saving ? { opacity: 0.5 } : undefined}
           {...press(save)}
         >
-          {room ? t(lang, "roomSaved").replace(" ✓", "") : t(lang, "add")}
+          {saving ? `🌐 ${t(lang, "translating")}` : room ? t(lang, "roomSaved").replace(" ✓", "") : t(lang, "add")}
         </button>
 
         {room && onDelete && (

@@ -5,6 +5,7 @@ import BottomSheet from "./BottomSheet.jsx";
 import FreqDepthPicker from "./FreqDepthPicker.jsx";
 import Icon from "./Icons.jsx";
 import TrilingualNameFields from "./TrilingualNameFields.jsx";
+import { finalizeName } from "../translate.js";
 
 // Edit an existing room task: trilingual name + freq + depth + delete.
 export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDelete }) {
@@ -13,6 +14,7 @@ export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDel
   const [nameFil, setNameFil] = useState("");
   const [freq, setFreq] = useState("weekly");
   const [depth, setDepth] = useState("surface");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open || !task) return;
@@ -25,18 +27,12 @@ export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDel
 
   if (!task) return null;
 
-  const save = () => {
-    if (!nameAr.trim()) return;
-    onSave({
-      ...task,
-      name: {
-        ar: nameAr.trim(),
-        en: nameEn.trim() || nameAr.trim(),
-        fil: nameFil.trim() || nameAr.trim(),
-      },
-      freq,
-      depth,
-    });
+  const save = async () => {
+    if (!nameAr.trim() || saving) return;
+    setSaving(true);
+    const name = await finalizeName(nameAr, nameEn, nameFil);
+    setSaving(false);
+    onSave({ ...task, name, freq, depth });
     onClose();
   };
 
@@ -61,11 +57,11 @@ export default function TaskEditSheet({ open, onClose, lang, task, onSave, onDel
         <button
           type="button"
           className="btn btn-primary btn-block"
-          disabled={!nameAr.trim()}
-          style={!nameAr.trim() ? { opacity: 0.5 } : undefined}
+          disabled={!nameAr.trim() || saving}
+          style={!nameAr.trim() || saving ? { opacity: 0.5 } : undefined}
           {...press(save)}
         >
-          {t(lang, "taskSaved").replace(" ✓", "")}
+          {saving ? `🌐 ${t(lang, "translating")}` : t(lang, "taskSaved").replace(" ✓", "")}
         </button>
         <button
           type="button"

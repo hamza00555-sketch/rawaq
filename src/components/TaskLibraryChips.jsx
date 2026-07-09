@@ -4,6 +4,7 @@ import { TASK_LIBRARY } from "../data.js";
 import { press } from "../press.js";
 import Icon from "./Icons.jsx";
 import TrilingualNameFields from "./TrilingualNameFields.jsx";
+import { finalizeName } from "../translate.js";
 
 // Suggested tasks for a room type: one tap adds. Already-added names are
 // hidden. A "write custom task" row expands the trilingual inputs.
@@ -18,13 +19,14 @@ export default function TaskLibraryChips({ lang, roomType, existingArNames, onPi
     (x) => !taken.has(x.ar)
   );
 
-  const submitCustom = () => {
-    if (!nameAr.trim()) return;
-    onCustom({
-      ar: nameAr.trim(),
-      en: nameEn.trim() || nameAr.trim(),
-      fil: nameFil.trim() || nameAr.trim(),
-    });
+  const [saving, setSaving] = useState(false);
+
+  const submitCustom = async () => {
+    if (!nameAr.trim() || saving) return;
+    setSaving(true);
+    const name = await finalizeName(nameAr, nameEn, nameFil);
+    setSaving(false);
+    onCustom(name);
     setNameAr("");
     setNameEn("");
     setNameFil("");
@@ -75,11 +77,11 @@ export default function TaskLibraryChips({ lang, roomType, existingArNames, onPi
           <button
             type="button"
             className="btn btn-primary btn-block"
-            disabled={!nameAr.trim()}
-            style={!nameAr.trim() ? { opacity: 0.5 } : undefined}
+            disabled={!nameAr.trim() || saving}
+            style={!nameAr.trim() || saving ? { opacity: 0.5 } : undefined}
             {...press(submitCustom)}
           >
-            {t(lang, "add")}
+            {saving ? `🌐 ${t(lang, "translating")}` : t(lang, "add")}
           </button>
         </div>
       )}

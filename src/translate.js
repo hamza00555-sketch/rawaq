@@ -35,9 +35,15 @@ function remember(key, value) {
   }
 }
 
+// A hung request on flaky mobile networks must not wedge the whole flow.
+const fetchOpts = () =>
+  typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function"
+    ? { signal: AbortSignal.timeout(7000) }
+    : {};
+
 async function viaGoogle(text, target) {
   const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ar&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
-  const res = await fetch(url);
+  const res = await fetch(url, fetchOpts());
   if (!res.ok) throw new Error(`gtx ${res.status}`);
   const data = await res.json();
   const out = (data?.[0] || [])
@@ -50,7 +56,7 @@ async function viaGoogle(text, target) {
 
 async function viaMyMemory(text, target) {
   const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=ar|${target}`;
-  const res = await fetch(url);
+  const res = await fetch(url, fetchOpts());
   if (!res.ok) throw new Error(`mymemory ${res.status}`);
   const data = await res.json();
   const out = data?.responseData?.translatedText?.trim();
@@ -82,6 +88,27 @@ export async function translateAr(text) {
   return result;
 }
 
+// Save-time safety net: the live fill can miss (mid-typing request
+// failed or is still in flight when mom hits save), so any name field
+// still empty gets one more translation attempt on the FULL final text
+// — instant when the live fill already cached it, capped at 2.5s so
+// saving never feels stuck. Total failure falls back to the Arabic
+// text, the pre-feature behavior.
+export async function finalizeName(ar, en, fil) {
+  ar = ar.trim();
+  en = en.trim();
+  fil = fil.trim();
+  if (ar && (!en || !fil)) {
+    const tr = await Promise.race([
+      translateAr(ar).catch(() => ({ en: "", fil: "" })),
+      new Promise((resolve) => setTimeout(() => resolve({ en: "", fil: "" }), 2500)),
+    ]);
+    en = en || tr.en;
+    fil = fil || tr.fil;
+  }
+  return { ar, en: en || ar, fil: fil || ar };
+}
+
 // Debounced live translation of an Arabic string as it's typed.
 // Pass "" to idle (empty input, or edit sheets before the name changes).
 export function useAutoTranslate(text) {
@@ -94,7 +121,10 @@ export function useAutoTranslate(text) {
       return;
     }
     let cancelled = false;
-    setState((s) => ({ ...s, busy: true }));
+    // Reset results, don't carry them: the text changed, so the old
+    // translation is stale — and an empty→value transition guarantees
+    // consumers re-apply even when the new translation is identical.
+    setState({ en: "", fil: "", busy: true });
     const timer = setTimeout(() => {
       translateAr(key).then(({ en, fil }) => {
         if (!cancelled) setState({ en, fil, busy: false });
