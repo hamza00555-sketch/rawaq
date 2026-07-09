@@ -30,8 +30,10 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
     // Map layout + priority ride inside the rooms meta values: the published
     // Firestore rules only whitelist top-level doc keys, so this needs no
     // rules change. Worker updates still touch only {tasks, updatedAt}.
-    const { blocks } = sanitizeMap(houseMap, rooms);
+    const { cols, rows, blocks } = sanitizeMap(houseMap, rooms);
     const roomsMeta = Object.fromEntries([
+      // grid dimensions ride as a pseudo-entry (no layout → renderers skip it)
+      ["__grid", { cols, rows }],
       ...rooms.map((r, i) => [
         r.id,
         { name: r.name, emoji: r.emoji, type: r.type || "general", layout: blocks[r.id] || null, priority: i + 1 },

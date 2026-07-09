@@ -2,9 +2,8 @@ import { useMemo, useState } from "react";
 import { t } from "../i18n.js";
 import { press } from "../press.js";
 import {
-  DOOR_SIDES,
-  GRID_COLS,
-  GRID_ROWS,
+  GRID_SIZES,
+  blocksFit,
   collides,
   findFreeSpot,
   isHall,
@@ -16,24 +15,19 @@ import DraggableTaskList from "../components/DraggableTaskList.jsx";
 import Snackbar from "../components/Snackbar.jsx";
 import Icon from "../components/Icons.jsx";
 
-// Stepper + door toolbar for the selected block. Size buttons grow toward
-// the bottom-right and disable instead of colliding; the door picker puts
-// a marker on one side (rooms only — hallways don't get doors).
-function BlockToolbar({ lang, id, blocks, onChange }) {
+// Stepper toolbar for the selected block, plus the wall legend: size
+// buttons grow toward the bottom-right and disable instead of colliding;
+// wall segments are edited by tapping the dots on the block itself.
+function BlockToolbar({ lang, id, blocks, cols, rows, onChange }) {
   const b = blocks[id];
 
   const apply = (rect) => onChange({ ...blocks, [id]: rect });
   const fits = (rect) =>
     rect.w >= 1 &&
     rect.h >= 1 &&
-    rect.x + rect.w <= GRID_COLS &&
-    rect.y + rect.h <= GRID_ROWS &&
+    rect.x + rect.w <= cols &&
+    rect.y + rect.h <= rows &&
     !collides(blocks, id, rect);
-
-  const sizeStep = (dim, delta) => {
-    const rect = { ...b, [dim]: b[dim] + delta };
-    if (fits(rect)) apply(rect);
-  };
 
   const stepper = (labelKey, dim) => (
     <div className="map-toolbar-row">
@@ -44,7 +38,7 @@ function BlockToolbar({ lang, id, blocks, onChange }) {
           className="stepper-btn"
           aria-label={`${t(lang, labelKey)} −`}
           disabled={!fits({ ...b, [dim]: b[dim] - 1 })}
-          {...press(() => sizeStep(dim, -1))}
+          {...press(() => fits({ ...b, [dim]: b[dim] - 1 }) && apply({ ...b, [dim]: b[dim] - 1 }))}
         >
           −
         </button>
@@ -54,7 +48,7 @@ function BlockToolbar({ lang, id, blocks, onChange }) {
           className="stepper-btn"
           aria-label={`${t(lang, labelKey)} +`}
           disabled={!fits({ ...b, [dim]: b[dim] + 1 })}
-          {...press(() => sizeStep(dim, 1))}
+          {...press(() => fits({ ...b, [dim]: b[dim] + 1 }) && apply({ ...b, [dim]: b[dim] + 1 }))}
         >
           +
         </button>
@@ -62,60 +56,31 @@ function BlockToolbar({ lang, id, blocks, onChange }) {
     </div>
   );
 
-  const doorGlyph = { n: "⬆", e: "➡", s: "⬇", w: "⬅" };
-
   return (
     <div className="card map-toolbar">
       {stepper("blockWidth", "w")}
       {stepper("blockHeight", "h")}
-      {!isHall(id) && (
-        <div className="map-toolbar-row">
-          <span className="map-toolbar-label">{t(lang, "door")}</span>
-          {/* dir=ltr so the side arrows stay spatial, matching the map */}
-          <div className="seg door-seg" dir="ltr" role="radiogroup" aria-label={t(lang, "door")}>
-            <button
-              type="button"
-              className={`seg-btn ${!b.door ? "active" : ""}`}
-              role="radio"
-              aria-checked={!b.door}
-              {...press(() => {
-                const rect = { ...b };
-                delete rect.door;
-                apply(rect);
-              })}
-            >
-              {t(lang, "doorNone")}
-            </button>
-            {DOOR_SIDES.map((side) => (
-              <button
-                key={side}
-                type="button"
-                className={`seg-btn ${b.door === side ? "active" : ""}`}
-                role="radio"
-                aria-checked={b.door === side}
-                aria-label={`${t(lang, "door")} ${side}`}
-                {...press(() => apply({ ...b, door: side }))}
-              >
-                {doorGlyph[side]}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <p className="muted" style={{ fontSize: 13 }}>{t(lang, "edgeHint")}</p>
+      <div className="edge-legend" dir="ltr">
+        <span><i className="map-edge edge-door legend-swatch" /> {t(lang, "doorInner")}</span>
+        <span><i className="map-edge edge-exit legend-swatch" /> {t(lang, "doorExit")}</span>
+        <span><i className="map-edge edge-open legend-swatch" /> {t(lang, "openWall")}</span>
+      </div>
     </div>
   );
 }
 
-// Mom's map editor: the grid on top, a toolbar for the selected block,
-// unplaced-room chips + add-hallway under it, then the priority list.
-// Reordering the list renumbers the badges on the map live — priority IS
-// the rooms array order, no separate field.
+// Mom's map editor: zoom row + grid on top, a toolbar for the selected
+// block, unplaced-room chips + add-hallway under it, then the priority
+// list. Reordering the list renumbers the badges on the map live —
+// priority IS the rooms array order, no separate field.
 export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHouseMap, onBack }) {
   const [snack, setSnack] = useState(null);
   const [selected, setSelected] = useState(null);
 
   const map = useMemo(() => sanitizeMap(houseMap, rooms), [houseMap, rooms]);
-  const blocks = map.blocks;
+  const { cols, rows, blocks } = map;
+  const sizeIdx = GRID_SIZES.findIndex((s) => s.cols === cols);
 
   const roomName = (room) => room.name[lang] || room.name.ar;
 
@@ -144,10 +109,20 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
 
   const unplaced = rooms.filter((room) => !blocks[room.id]);
 
-  const commit = (nextBlocks) => setHouseMap({ blocks: nextBlocks });
+  const commit = (nextBlocks) => setHouseMap({ cols, rows, blocks: nextBlocks });
+
+  const setSize = (idx) => {
+    const size = GRID_SIZES[idx];
+    if (!size) return;
+    if (!blocksFit(blocks, size.cols, size.rows)) {
+      setSnack({ message: t(lang, "zoomBlocked") });
+      return;
+    }
+    setHouseMap({ cols: size.cols, rows: size.rows, blocks });
+  };
 
   const placeRoom = (room) => {
-    const spot = findFreeSpot(blocks, 2, 2) || findFreeSpot(blocks, 1, 1);
+    const spot = findFreeSpot(blocks, 2, 2, cols, rows) || findFreeSpot(blocks, 1, 1, cols, rows);
     if (!spot) {
       setSnack({ message: t(lang, "mapFull") });
       return;
@@ -159,11 +134,11 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
   // Hallways are elongated by nature — try both orientations first.
   const addHall = () => {
     const spot =
-      findFreeSpot(blocks, 1, 3) ||
-      findFreeSpot(blocks, 3, 1) ||
-      findFreeSpot(blocks, 1, 2) ||
-      findFreeSpot(blocks, 2, 1) ||
-      findFreeSpot(blocks, 1, 1);
+      findFreeSpot(blocks, 1, 3, cols, rows) ||
+      findFreeSpot(blocks, 3, 1, cols, rows) ||
+      findFreeSpot(blocks, 1, 2, cols, rows) ||
+      findFreeSpot(blocks, 2, 1, cols, rows) ||
+      findFreeSpot(blocks, 1, 1, cols, rows);
     if (!spot) {
       setSnack({ message: t(lang, "mapFull") });
       return;
@@ -184,6 +159,27 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
           </button>
           <h1>{t(lang, "houseMap")}</h1>
         </div>
+        <div className="stepper" dir="ltr" aria-label={t(lang, "mapZoom")}>
+          <button
+            type="button"
+            className="stepper-btn"
+            aria-label={t(lang, "zoomIn")}
+            disabled={sizeIdx <= 0}
+            {...press(() => setSize(sizeIdx - 1))}
+          >
+            +
+          </button>
+          <span className="stepper-value" style={{ fontSize: 13 }}>{cols}×{rows}</span>
+          <button
+            type="button"
+            className="stepper-btn"
+            aria-label={t(lang, "zoomOut")}
+            disabled={sizeIdx >= GRID_SIZES.length - 1}
+            {...press(() => setSize(sizeIdx + 1))}
+          >
+            −
+          </button>
+        </div>
       </header>
 
       <p className="muted" style={{ marginBottom: 10 }}>
@@ -193,12 +189,16 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
       <HouseMapEditor
         entries={entries}
         blocks={blocks}
+        cols={cols}
+        rows={rows}
         onChange={commit}
         selected={selectedExists ? selected : null}
         setSelected={setSelected}
       />
 
-      {selectedExists && <BlockToolbar lang={lang} id={selected} blocks={blocks} onChange={commit} />}
+      {selectedExists && (
+        <BlockToolbar lang={lang} id={selected} blocks={blocks} cols={cols} rows={rows} onChange={commit} />
+      )}
 
       {unplaced.length > 0 && <h2 className="section-title">{t(lang, "unplacedRooms")}</h2>}
       <div className="map-chip-tray" style={{ marginTop: unplaced.length ? 0 : 14 }}>

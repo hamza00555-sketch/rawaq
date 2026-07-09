@@ -93,6 +93,8 @@ export default function WorkerView({ payload, shortId }) {
   // green live as its room's tasks complete (the same tasks state that
   // syncs back to mom); rooms with no tasks today are dimmed.
   const hasMap = roomsMeta && Object.values(roomsMeta).some((m) => m.layout);
+  const gridCols = roomsMeta?.__grid?.cols || 6;
+  const gridRows = roomsMeta?.__grid?.rows || 8;
   const mapEntries = hasMap
     ? Object.entries(roomsMeta)
         .filter(([, m]) => m.layout)
@@ -162,6 +164,8 @@ export default function WorkerView({ payload, shortId }) {
           <div style={{ marginBottom: 18 }}>
             <HouseMap
               entries={mapEntries}
+              cols={gridCols}
+              rows={gridRows}
               selectedId={selectedRoomId}
               onTapRoom={(id) => setSelectedRoomId(id === selectedRoomId ? null : id)}
             />

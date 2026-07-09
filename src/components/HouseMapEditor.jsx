@@ -1,16 +1,18 @@
 import { useRef, useState } from "react";
-import { GRID_COLS, GRID_ROWS, collides } from "../houseMap.js";
-import { rectStyle, BlockContent } from "./HouseMap.jsx";
+import { collides, cycleEdge, edgeKind, sideLen } from "../houseMap.js";
+import { rectStyle, BlockContent, EdgeMarks } from "./HouseMap.jsx";
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 // Grid editor: drag a block to move it, drag the selected block's corner
-// handle to resize, tap the ✕ chip to unplace. The grid is a no-scroll
-// island (touch-action none), so dragging starts immediately — no
-// long-press needed. Geometry is committed on pointerup only; an
+// handle to resize, tap the ✕ chip to unplace. Selecting a block also
+// reveals a dot on every wall segment — tapping a dot cycles that piece
+// of wall: door → exit door → open (no wall) → plain wall. The grid is
+// a no-scroll island (touch-action none), so dragging starts immediately
+// — no long-press needed. Geometry is committed on pointerup only; an
 // overlapping drop tints red and reverts. Selection is controlled by the
-// parent, which shows a size/door toolbar for the selected block.
-export default function HouseMapEditor({ entries, blocks, onChange, selected, setSelected }) {
+// parent, which shows a size toolbar for the selected block.
+export default function HouseMapEditor({ entries, blocks, cols, rows, onChange, selected, setSelected }) {
   const [draft, setDraft] = useState(null); // {id, rect, valid}
   const gesture = useRef(null);
   const gridRef = useRef(null);
@@ -42,21 +44,21 @@ export default function HouseMapEditor({ entries, blocks, onChange, selected, se
     const grid = gridRef.current?.getBoundingClientRect();
     if (!grid || !grid.width) return;
     // Rect-relative cell math — safe under the large-UI zoom.
-    const dCol = Math.round((e.clientX - g.startX) / (grid.width / GRID_COLS));
-    const dRow = Math.round((e.clientY - g.startY) / (grid.height / GRID_ROWS));
-    // spread orig first: keeps non-geometry fields (door) through commits
+    const dCol = Math.round((e.clientX - g.startX) / (grid.width / cols));
+    const dRow = Math.round((e.clientY - g.startY) / (grid.height / rows));
+    // spread orig first: keeps non-geometry fields (edges) through commits
     let rect;
     if (g.mode === "move") {
       rect = {
         ...g.orig,
-        x: clamp(g.orig.x + dCol, 0, GRID_COLS - g.orig.w),
-        y: clamp(g.orig.y + dRow, 0, GRID_ROWS - g.orig.h),
+        x: clamp(g.orig.x + dCol, 0, cols - g.orig.w),
+        y: clamp(g.orig.y + dRow, 0, rows - g.orig.h),
       };
     } else {
       rect = {
         ...g.orig,
-        w: clamp(g.orig.w + dCol, 1, GRID_COLS - g.orig.x),
-        h: clamp(g.orig.h + dRow, 1, GRID_ROWS - g.orig.y),
+        w: clamp(g.orig.w + dCol, 1, cols - g.orig.x),
+        h: clamp(g.orig.h + dRow, 1, rows - g.orig.y),
       };
     }
     if (dCol !== 0 || dRow !== 0) g.moved = true;
@@ -106,17 +108,46 @@ export default function HouseMapEditor({ entries, blocks, onChange, selected, se
     const b = blocks[entry.id];
     const rect = {
       ...b,
-      x: clamp(b.x + delta[0], 0, GRID_COLS - b.w),
-      y: clamp(b.y + delta[1], 0, GRID_ROWS - b.h),
+      x: clamp(b.x + delta[0], 0, cols - b.w),
+      y: clamp(b.y + delta[1], 0, rows - b.h),
     };
     if (!collides(blocks, entry.id, rect)) onChange({ ...blocks, [entry.id]: rect });
   };
 
+  // One tappable dot per wall segment of the selected block.
+  const edgeDots = (id, rect) => {
+    const dots = [];
+    for (const side of ["n", "e", "s", "w"]) {
+      const len = sideLen(rect, side);
+      const horizontal = side === "n" || side === "s";
+      for (let at = 0; at < len; at++) {
+        const kind = edgeKind(rect, side, at);
+        const along = `${((at + 0.5) / len) * 100}%`;
+        const pos = horizontal
+          ? { left: along, transform: "translateX(-50%)", [side === "n" ? "top" : "bottom"]: -15 }
+          : { top: along, transform: "translateY(-50%)", [side === "e" ? "right" : "left"]: -15 };
+        dots.push(
+          <button
+            key={`${side}:${at}`}
+            type="button"
+            className={`map-edge-dot ${kind ? `kind-${kind}` : ""}`}
+            style={pos}
+            aria-label={`${side}${at}`}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onChange({ ...blocks, [id]: cycleEdge(rect, side, at) })}
+          />
+        );
+      }
+    }
+    return dots;
+  };
+
   return (
     <div
-      className="house-map editing"
+      className={`house-map editing${cols >= 12 ? " dense-2" : cols >= 9 ? " dense-1" : ""}`}
       dir="ltr"
       ref={gridRef}
+      style={{ "--cols": cols, "--rows": rows }}
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) setSelected(null);
       }}
@@ -143,7 +174,7 @@ export default function HouseMapEditor({ entries, blocks, onChange, selected, se
             tabIndex={0}
             aria-label={entry.name}
             className={cls}
-            style={{ ...rectStyle(rect), touchAction: "none" }}
+            style={{ ...rectStyle(rect, cols, rows), touchAction: "none" }}
             onPointerDown={startGesture("move", entry.id)}
             onPointerMove={handleMove}
             onPointerUp={handleUp}
@@ -151,15 +182,18 @@ export default function HouseMapEditor({ entries, blocks, onChange, selected, se
             onKeyDown={moveByKey(entry)}
           >
             <BlockContent emoji={entry.emoji} name={entry.name} priority={entry.priority} />
-            {rect.door && <span className={`map-door door-${rect.door}`} aria-hidden="true" />}
+            <EdgeMarks rect={rect} />
             {isSelected && !dragging && (
-              <button
-                type="button"
-                className="map-remove-chip"
-                aria-label={entry.removeLabel}
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => removeBlock(entry.id)}
-              />
+              <>
+                <button
+                  type="button"
+                  className="map-remove-chip"
+                  aria-label={entry.removeLabel}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => removeBlock(entry.id)}
+                />
+                {edgeDots(entry.id, rect)}
+              </>
             )}
             {isSelected && (
               <span

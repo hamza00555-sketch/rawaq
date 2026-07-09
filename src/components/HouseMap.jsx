@@ -1,14 +1,28 @@
 import { press } from "../press.js";
-import { GRID_COLS, GRID_ROWS } from "../houseMap.js";
+import { DEFAULT_COLS, DEFAULT_ROWS, blockEdges } from "../houseMap.js";
 
 // Percent geometry keeps blocks correct at any width and under the
 // large-UI zoom setting.
-export const rectStyle = (r) => ({
-  left: `${(r.x / GRID_COLS) * 100}%`,
-  top: `${(r.y / GRID_ROWS) * 100}%`,
-  width: `${(r.w / GRID_COLS) * 100}%`,
-  height: `${(r.h / GRID_ROWS) * 100}%`,
+export const rectStyle = (r, cols = DEFAULT_COLS, rows = DEFAULT_ROWS) => ({
+  left: `${(r.x / cols) * 100}%`,
+  top: `${(r.y / rows) * 100}%`,
+  width: `${(r.w / cols) * 100}%`,
+  height: `${(r.h / rows) * 100}%`,
 });
+
+// Position + size of a wall-segment marker (door/exit/open) on a block:
+// centered on cell `at` of `side`, thin across the wall, most of a cell
+// long along it.
+export function edgeStyle(rect, { side, at, kind }) {
+  const horizontal = side === "n" || side === "s";
+  const len = horizontal ? rect.w : rect.h;
+  const along = `${((at + 0.5) / len) * 100}%`;
+  const size = `${(kind === "open" ? 90 : 62) / len}%`;
+  const thick = kind === "open" ? 11 : 8;
+  return horizontal
+    ? { left: along, transform: "translateX(-50%)", width: size, height: thick, [side === "n" ? "top" : "bottom"]: -5 }
+    : { top: along, transform: "translateY(-50%)", height: size, width: thick, [side === "e" ? "right" : "left"]: -5 };
+}
 
 export function BlockContent({ emoji, name, priority }) {
   return (
@@ -20,14 +34,29 @@ export function BlockContent({ emoji, name, priority }) {
   );
 }
 
+export function EdgeMarks({ rect }) {
+  return blockEdges(rect).map((edge) => (
+    <span
+      key={`${edge.side}:${edge.at}`}
+      className={`map-edge edge-${edge.kind}`}
+      style={edgeStyle(rect, edge)}
+      aria-hidden="true"
+    />
+  ));
+}
+
 // Read-only house map, shared by mom's preview and the worker view.
 // The canvas is always LTR: a floor plan is spatial, not text — it must
 // not mirror when the UI language flips between Arabic and English.
 // entries: [{id, rect, emoji, name, type, priority, done, dimmed}]
-// (rect may carry door: n|e|s|w; type "hall" blocks are never tappable)
-export default function HouseMap({ entries, selectedId, onTapRoom }) {
+// (rect may carry edges/legacy door; type "hall" blocks are never tappable)
+export default function HouseMap({ entries, cols = DEFAULT_COLS, rows = DEFAULT_ROWS, selectedId, onTapRoom }) {
   return (
-    <div className="house-map" dir="ltr">
+    <div
+      className={`house-map${cols >= 12 ? " dense-2" : cols >= 9 ? " dense-1" : ""}`}
+      dir="ltr"
+      style={{ "--cols": cols, "--rows": rows }}
+    >
       {entries.map((entry) => {
         const small = entry.rect.w === 1 || entry.rect.h === 1;
         const tappable = !!onTapRoom && !entry.dimmed && entry.type !== "hall";
@@ -46,14 +75,14 @@ export default function HouseMap({ entries, selectedId, onTapRoom }) {
             key={entry.id}
             type="button"
             className={cls}
-            style={rectStyle(entry.rect)}
+            style={rectStyle(entry.rect, cols, rows)}
             disabled={!tappable}
             aria-label={entry.name}
             aria-pressed={selectedId === entry.id}
             {...(tappable ? press(() => onTapRoom(entry.id)) : {})}
           >
             <BlockContent emoji={entry.emoji} name={entry.name} priority={entry.priority} />
-            {entry.rect.door && <span className={`map-door door-${entry.rect.door}`} aria-hidden="true" />}
+            <EdgeMarks rect={entry.rect} />
           </button>
         );
       })}

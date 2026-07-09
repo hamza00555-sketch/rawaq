@@ -963,12 +963,13 @@ select.input { appearance: auto; }
 .house-map {
   position: relative;
   width: 100%;
-  aspect-ratio: 6 / 8;
+  aspect-ratio: 3 / 4; /* every grid size is 3:4 — zoom only changes cell count */
   border-radius: var(--radius);
-  background:
-    repeating-linear-gradient(to right, transparent 0, transparent calc(100% / 6 - 1px), var(--border) calc(100% / 6 - 1px), var(--border) calc(100% / 6)),
-    repeating-linear-gradient(to bottom, transparent 0, transparent calc(100% / 8 - 1px), var(--border) calc(100% / 8 - 1px), var(--border) calc(100% / 8)),
-    var(--surface-2);
+  background-color: var(--surface-2);
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: calc(100% / var(--cols, 6)) calc(100% / var(--rows, 8));
   border: 1px solid var(--border);
   /* overflow stays visible: the selected block's resize handle and remove
      chip overhang the block (and can overhang the grid edge) — clipping
@@ -1031,19 +1032,80 @@ select.input { appearance: auto; }
 }
 .map-block.type-hall .map-name { color: var(--text-2); }
 
-/* Door: a small bar straddling one side of the block */
-.map-door {
+/* Wall segments: a bar straddling one piece of a block's wall.
+   door = inner door (amber) · exit = house exit (green, glowing) ·
+   open = no wall (open-plan gap that visually erases the border) */
+.map-edge {
   position: absolute;
-  background: var(--door);
   border-radius: 4px;
-  box-shadow: 0 0 0 2px var(--bg);
   pointer-events: none;
   z-index: 2;
 }
-.map-door.door-n { top: -4px; left: 50%; transform: translateX(-50%); width: 22px; height: 8px; }
-.map-door.door-s { bottom: -4px; left: 50%; transform: translateX(-50%); width: 22px; height: 8px; }
-.map-door.door-e { right: -4px; top: 50%; transform: translateY(-50%); width: 8px; height: 22px; }
-.map-door.door-w { left: -4px; top: 50%; transform: translateY(-50%); width: 8px; height: 22px; }
+.map-edge.edge-door {
+  background: var(--door);
+  box-shadow: 0 0 0 2px var(--bg);
+}
+.map-edge.edge-exit {
+  background: var(--success);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 10px var(--success);
+}
+.map-edge.edge-open {
+  background: var(--surface-solid);
+  opacity: 0.92;
+}
+
+/* Editor: one tappable dot per wall segment of the selected block */
+.map-edge-dot {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+.map-edge-dot::after {
+  content: "";
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--surface-solid);
+  border: 2px dashed var(--text-2);
+  box-sizing: border-box;
+  box-shadow: var(--shadow);
+}
+.map-edge-dot.kind-door::after { background: var(--door); border: 2px solid var(--surface-solid); }
+.map-edge-dot.kind-exit::after { background: var(--success); border: 2px solid var(--surface-solid); }
+.map-edge-dot.kind-open::after { background: transparent; border: 2px solid var(--primary); }
+
+/* Wall legend under the toolbar */
+.edge-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.edge-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend-swatch {
+  position: static;
+  display: inline-block;
+  width: 22px;
+  height: 8px;
+}
+.map-edge.edge-open.legend-swatch { border: 1px dashed var(--text-2); opacity: 1; }
+
+/* Denser grids (zoomed out): smaller block chrome */
+.house-map.dense-1 .map-block .map-emoji { font-size: 18px; }
+.house-map.dense-1 .map-block .map-name { font-size: 11px; }
+.house-map.dense-1 .map-priority { min-width: 16px; height: 16px; font-size: 10.5px; }
+.house-map.dense-2 .map-block .map-emoji { font-size: 14px; }
+.house-map.dense-2 .map-block .map-name { display: none; }
+.house-map.dense-2 .map-priority { min-width: 14px; height: 14px; font-size: 9.5px; top: 2px; right: 2px; }
 
 .map-priority {
   position: absolute;
