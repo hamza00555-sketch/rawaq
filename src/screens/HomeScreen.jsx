@@ -93,7 +93,7 @@ export default function HomeScreen({ lang, owner, today, rooms, setRooms, houseM
               <Icon name="pencil" size={18} />
             </button>
           </div>
-          <HouseMap entries={mapEntries} cols={cols} rows={rows} />
+          <HouseMap entries={mapEntries} cols={cols} rows={rows} fit />
         </section>
       )}
 

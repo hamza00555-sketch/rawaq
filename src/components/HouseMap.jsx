@@ -50,14 +50,36 @@ export function EdgeMarks({ rect }) {
 // not mirror when the UI language flips between Arabic and English.
 // entries: [{id, rect, emoji, name, type, priority, done, dimmed}]
 // (rect may carry edges/legacy door; type "hall" blocks are never tappable)
-export default function HouseMap({ entries, cols = DEFAULT_COLS, rows = DEFAULT_ROWS, selectedId, onTapRoom }) {
+export default function HouseMap({ entries, cols = DEFAULT_COLS, rows = DEFAULT_ROWS, selectedId, onTapRoom, fit = false }) {
+  // Fit mode (Home preview): crop to the placed rooms' bounding box and
+  // let the container's aspect-ratio follow the real house shape, so a
+  // wide house renders short-and-wide and a tall house a narrow strip —
+  // never the full empty grid. CSS caps the height either way.
+  let vcols = cols;
+  let vrows = rows;
+  let items = entries;
+  const style = { "--cols": cols, "--rows": rows };
+  if (fit && entries.length) {
+    const minX = Math.min(...entries.map((e) => e.rect.x));
+    const minY = Math.min(...entries.map((e) => e.rect.y));
+    const maxX = Math.max(...entries.map((e) => e.rect.x + e.rect.w));
+    const maxY = Math.max(...entries.map((e) => e.rect.y + e.rect.h));
+    vcols = maxX - minX;
+    vrows = maxY - minY;
+    items = entries.map((e) => ({ ...e, rect: { ...e.rect, x: e.rect.x - minX, y: e.rect.y - minY } }));
+    style["--cols"] = vcols;
+    style["--rows"] = vrows;
+    style["--ar"] = vcols / vrows;
+  }
+  const dense = vcols >= 12 ? " dense-2" : vcols >= 9 ? " dense-1" : "";
+
   return (
     <div
-      className={`house-map${cols >= 12 ? " dense-2" : cols >= 9 ? " dense-1" : ""}`}
+      className={`house-map${dense}${fit ? " fit" : ""}`}
       dir="ltr"
-      style={{ "--cols": cols, "--rows": rows }}
+      style={style}
     >
-      {entries.map((entry) => {
+      {items.map((entry) => {
         const small = entry.rect.w === 1 || entry.rect.h === 1;
         const tappable = !!onTapRoom && !entry.dimmed && entry.type !== "hall";
         const cls = [
@@ -75,7 +97,7 @@ export default function HouseMap({ entries, cols = DEFAULT_COLS, rows = DEFAULT_
             key={entry.id}
             type="button"
             className={cls}
-            style={rectStyle(entry.rect, cols, rows)}
+            style={rectStyle(entry.rect, vcols, vrows)}
             disabled={!tappable}
             aria-label={entry.name}
             aria-pressed={selectedId === entry.id}

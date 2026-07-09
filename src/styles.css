@@ -1316,3 +1316,15 @@ select.input { appearance: auto; }
   gap: 2px;
   min-width: 0;
 }
+
+/* Fit-to-content map (Home preview): shape follows the house, height
+   capped. width = min(full, ratio × capped-height) so a tall house
+   becomes a narrow centered strip and a wide house a short band. */
+.house-map.fit {
+  aspect-ratio: var(--ar, 1);
+  width: min(100%, calc(var(--ar, 1) * min(340px, 42vh)));
+  margin-inline: auto;
+}
+.house-map.fit .map-emoji { font-size: 20px; }
+.house-map.fit .map-name { font-size: 11px; }
+.house-map.fit .map-priority { min-width: 16px; height: 16px; font-size: 10.5px; }
