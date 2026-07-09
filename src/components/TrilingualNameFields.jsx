@@ -24,7 +24,14 @@ export default function TrilingualNameFields({
   const manualFil = useRef(false);
   const lastAr = useRef(ar);
 
-  const armed = ar.trim() && ar.trim() !== initialAr.trim() ? ar : "";
+  // A translation slot is "missing" when empty OR still holding the
+  // Arabic text (the old save-fallback). Rooms/tasks saved before the
+  // translator existed — or while it was unreachable — get auto-filled
+  // the moment their edit sheet opens, not only after the name changes.
+  const missing = (v) => !v.trim() || v.trim() === ar.trim();
+  const needsFill =
+    (missing(en) && !manualEn.current) || (missing(fil) && !manualFil.current);
+  const armed = ar.trim() && (ar.trim() !== initialAr.trim() || needsFill) ? ar : "";
   const tr = useAutoTranslate(armed);
 
   // The Arabic changed → any auto-filled translation is now stale. Clear
@@ -42,8 +49,8 @@ export default function TrilingualNameFields({
   }, [ar]);
 
   useEffect(() => {
-    if (tr.en && !manualEn.current) onEn(tr.en);
-    if (tr.fil && !manualFil.current) onFil(tr.fil);
+    if (tr.en && !manualEn.current && missing(en)) onEn(tr.en);
+    if (tr.fil && !manualFil.current && missing(fil)) onFil(tr.fil);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tr.en, tr.fil]);
 
@@ -56,8 +63,17 @@ export default function TrilingualNameFields({
         onChange={(e) => onAr(e.target.value)}
         placeholder={t(lang, placeholders.ar)}
       />
-      <p className="muted translate-hint" role="status" aria-live="polite">
-        {tr.busy ? `🌐 ${t(lang, "translating")}` : " "}
+      <p
+        className="muted translate-hint"
+        role="status"
+        aria-live="polite"
+        style={tr.failed && !tr.busy ? { color: "var(--danger)" } : undefined}
+      >
+        {tr.busy
+          ? `🌐 ${t(lang, "translating")}`
+          : tr.failed && armed
+            ? `🌐 ${t(lang, "translateFailed")}`
+            : " "}
       </p>
       <input
         className="input"

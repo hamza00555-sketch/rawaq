@@ -148,6 +148,7 @@ export const T = {
     zoomOut: "تصغير (مساحة أكبر)",
     zoomBlocked: "صغّري أو حرّكي الغرف أولاً — في غرف خارج المساحة الأصغر",
     translating: "جارٍ الترجمة تلقائياً…",
+    translateFailed: "تعذرت الترجمة الآن — سنحاول مرة أخرى عند الحفظ",
   },
   en: {
     appName: "Rawaq",
@@ -292,6 +293,7 @@ export const T = {
     zoomOut: "Zoom out (more space)",
     zoomBlocked: "Shrink or move rooms first — some sit outside the smaller area",
     translating: "Translating…",
+    translateFailed: "Translation unavailable — will retry on save",
   },
   fil: {
     appName: "Rawaq",
@@ -436,6 +438,7 @@ export const T = {
     zoomOut: "Paliitin (mas malawak)",
     zoomBlocked: "Paliitin o ilipat muna ang mga kwarto",
     translating: "Isinasalin…",
+    translateFailed: "Hindi ma-translate ngayon — susubukan sa pag-save",
   },
 };
 

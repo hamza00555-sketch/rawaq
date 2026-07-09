@@ -112,22 +112,22 @@ export async function finalizeName(ar, en, fil) {
 // Debounced live translation of an Arabic string as it's typed.
 // Pass "" to idle (empty input, or edit sheets before the name changes).
 export function useAutoTranslate(text) {
-  const [state, setState] = useState({ en: "", fil: "", busy: false });
+  const [state, setState] = useState({ en: "", fil: "", busy: false, failed: false });
 
   useEffect(() => {
     const key = text.trim();
     if (!key) {
-      setState({ en: "", fil: "", busy: false });
+      setState({ en: "", fil: "", busy: false, failed: false });
       return;
     }
     let cancelled = false;
     // Reset results, don't carry them: the text changed, so the old
     // translation is stale — and an empty→value transition guarantees
     // consumers re-apply even when the new translation is identical.
-    setState({ en: "", fil: "", busy: true });
+    setState({ en: "", fil: "", busy: true, failed: false });
     const timer = setTimeout(() => {
       translateAr(key).then(({ en, fil }) => {
-        if (!cancelled) setState({ en, fil, busy: false });
+        if (!cancelled) setState({ en, fil, busy: false, failed: !en && !fil });
       });
     }, 500);
     return () => {
