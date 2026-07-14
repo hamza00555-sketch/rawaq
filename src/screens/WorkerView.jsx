@@ -107,22 +107,28 @@ export default function WorkerView({ payload, shortId }) {
   // The map appears when the share carries block layouts. A block goes
   // green live as its room's tasks complete (the same tasks state that
   // syncs back to mom); rooms with no tasks today are dimmed.
-  const hasMap = roomsMeta && Object.values(roomsMeta).some((m) => m.layout);
+  const hasMap = roomsMeta && Object.values(roomsMeta).some((m) => m.layout || m.layouts);
   const gridCols = roomsMeta?.__grid?.cols || 6;
   const gridRows = roomsMeta?.__grid?.rows || 8;
+  // A hall may span several blocks (layouts); render each, but only the first
+  // shows the label. Tap/greening act on the shared roomId.
   const mapEntries = hasMap
-    ? Object.entries(roomsMeta)
-        .filter(([, m]) => m.layout)
-        .map(([roomId, m]) => ({
-          id: roomId,
-          rect: m.layout,
-          emoji: m.emoji,
+    ? Object.entries(roomsMeta).flatMap(([roomId, m]) => {
+        if (roomId.startsWith("__")) return [];
+        const rects = m.layouts || (m.layout ? [m.layout] : []);
+        return rects.map((rect, i) => ({
+          id: `${roomId}#${i}`,
+          roomId,
+          rect,
+          emoji: i === 0 ? m.emoji : "",
           name: nm(m.name),
           type: m.type || "general",
-          priority: m.priority,
+          priority: i === 0 ? m.priority : null,
+          showLabel: i === 0,
           done: roomDone(tasks, roomId),
           dimmed: !tasks.some((x) => x.roomId === roomId),
-        }))
+        }));
+      })
     : [];
 
   const shownGroups = selectedRoomId

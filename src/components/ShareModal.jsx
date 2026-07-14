@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { t } from "../i18n.js";
 import { taskFingerprint, todayStr } from "../data.js";
-import { sanitizeMap } from "../houseMap.js";
+import { ownerOf, sanitizeMap } from "../houseMap.js";
 import { compressImage } from "../image.js";
 import { createShare, shareIdFromLink } from "../shares.js";
 import BottomSheet from "./BottomSheet.jsx";
@@ -65,10 +65,25 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
       ["__prefs", { lang: workerLang || "fil" }],
       // Rooms and hallways alike (halls are rooms with type "hall"): each
       // carries its layout, priority, photo and its tasks flow via today.tasks.
-      ...rooms.map((r, i) => [
-        r.id,
-        { name: r.name, emoji: r.emoji, type: r.type || "general", layout: blocks[r.id] || null, priority: i + 1, photo: photoById[r.id] || null },
-      ]),
+      // A hall may span several blocks — `layouts` holds them all; `layout`
+      // stays the primary rect for older worker builds / hasMap detection.
+      ...rooms.map((r, i) => {
+        const rects = Object.entries(blocks)
+          .filter(([id, b]) => ownerOf(id, b) === r.id)
+          .map(([, b]) => b);
+        return [
+          r.id,
+          {
+            name: r.name,
+            emoji: r.emoji,
+            type: r.type || "general",
+            layout: blocks[r.id] || rects[0] || null,
+            layouts: rects.length ? rects : null,
+            priority: i + 1,
+            photo: photoById[r.id] || null,
+          },
+        ];
+      }),
     ]);
     createShare({ date: today.date, owner, tasks: today.tasks, rooms: roomsMeta })
       .then((link) => {

@@ -48,8 +48,10 @@ export function EdgeMarks({ rect }) {
 // Read-only house map, shared by mom's preview and the worker view.
 // The canvas is always LTR: a floor plan is spatial, not text — it must
 // not mirror when the UI language flips between Arabic and English.
-// entries: [{id, rect, emoji, name, type, priority, done, dimmed}]
-// (rect may carry edges/legacy door; blocks are tappable unless dimmed)
+// entries: [{id, roomId?, rect, emoji, name, type, priority, done, dimmed, showLabel?}]
+// A hall can span several blocks: each is its own entry sharing one roomId,
+// and only the primary segment shows the label (showLabel). Tap/selection act
+// on roomId. (rect may carry edges/legacy door; blocks are tappable unless dimmed)
 export default function HouseMap({ entries, cols = DEFAULT_COLS, rows = DEFAULT_ROWS, selectedId, onTapRoom, fit = false }) {
   // Fit mode (Home preview): crop to the placed rooms' bounding box and
   // let the container's aspect-ratio follow the real house shape, so a
@@ -80,6 +82,7 @@ export default function HouseMap({ entries, cols = DEFAULT_COLS, rows = DEFAULT_
       style={style}
     >
       {items.map((entry) => {
+        const rid = entry.roomId ?? entry.id;
         const small = entry.rect.w === 1 || entry.rect.h === 1;
         const tappable = !!onTapRoom && !entry.dimmed;
         const cls = [
@@ -88,7 +91,7 @@ export default function HouseMap({ entries, cols = DEFAULT_COLS, rows = DEFAULT_
           small ? "small" : "",
           entry.done ? "done" : "",
           entry.dimmed ? "dimmed" : "",
-          selectedId === entry.id ? "selected" : "",
+          selectedId === rid ? "selected" : "",
         ]
           .filter(Boolean)
           .join(" ");
@@ -100,10 +103,12 @@ export default function HouseMap({ entries, cols = DEFAULT_COLS, rows = DEFAULT_
             style={rectStyle(entry.rect, vcols, vrows)}
             disabled={!tappable}
             aria-label={entry.name}
-            aria-pressed={selectedId === entry.id}
-            {...(tappable ? press(() => onTapRoom(entry.id)) : {})}
+            aria-pressed={selectedId === rid}
+            {...(tappable ? press(() => onTapRoom(rid)) : {})}
           >
-            <BlockContent emoji={entry.emoji} name={entry.name} priority={entry.priority} />
+            {entry.showLabel !== false && (
+              <BlockContent emoji={entry.emoji} name={entry.name} priority={entry.priority} />
+            )}
             <EdgeMarks rect={entry.rect} />
           </button>
         );

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { t } from "../i18n.js";
 import { formatDate } from "../data.js";
 import { press } from "../press.js";
-import { mapDims, roomDone, sanitizeMap } from "../houseMap.js";
+import { mapDims, placedEntries, roomDone, sanitizeMap } from "../houseMap.js";
 import { useCelebration } from "../useCelebration.js";
 import ProgressRing from "../components/ProgressRing.jsx";
 import HouseMap from "../components/HouseMap.jsx";
@@ -54,18 +54,22 @@ export default function HomeScreen({
   const map = useMemo(() => sanitizeMap(houseMap, rooms), [houseMap, rooms]);
   const { cols, rows } = mapDims(map);
   const nm = (name) => name[lang] || name.ar;
-  const mapEntries = rooms
-    .filter((r) => map.blocks[r.id])
-    .map((r) => ({
-      id: r.id,
-      rect: map.blocks[r.id],
-      emoji: r.emoji,
+  const roomsById = Object.fromEntries(rooms.map((r) => [r.id, r]));
+  const mapEntries = placedEntries(rooms, map.blocks).map(({ blockId, roomId, rect, primary }) => {
+    const r = roomsById[roomId];
+    return {
+      id: blockId,
+      roomId,
+      rect,
+      emoji: primary ? r.emoji : "",
       name: nm(r.name),
       type: r.type,
-      priority: rooms.indexOf(r) + 1,
-      done: roomDone(today.tasks, r.id),
-      dimmed: !today.tasks.some((x) => x.roomId === r.id),
-    }));
+      priority: primary ? rooms.indexOf(r) + 1 : null,
+      showLabel: primary,
+      done: roomDone(today.tasks, roomId),
+      dimmed: !today.tasks.some((x) => x.roomId === roomId),
+    };
+  });
   const hasMap = mapEntries.some((e) => e.type !== "hall");
 
   return (

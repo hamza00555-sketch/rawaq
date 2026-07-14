@@ -9,6 +9,8 @@ import {
   findFreeSpot,
   mergeConnectedHalls,
   newHallId,
+  placedEntries,
+  roomHasBlock,
   sanitizeMap,
 } from "../houseMap.js";
 import HouseMapEditor from "../components/HouseMapEditor.jsx";
@@ -88,19 +90,24 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
   const { cols, rows, blocks } = map;
 
   const roomName = (room) => room.name[lang] || room.name.ar;
+  const roomsById = Object.fromEntries(rooms.map((r) => [r.id, r]));
 
-  const entries = rooms
-    .filter((room) => blocks[room.id])
-    .map((room) => ({
-      id: room.id,
-      emoji: room.emoji,
-      name: roomName(room),
+  // One entry per placed block; a hall may have several, only its primary
+  // segment carries the emoji/name/priority label.
+  const entries = placedEntries(rooms, blocks).map(({ blockId, roomId, primary }) => {
+    const room = roomsById[roomId];
+    return {
+      id: blockId,
+      emoji: primary ? room.emoji : "",
+      name: primary ? roomName(room) : "",
       type: room.type,
-      priority: rooms.indexOf(room) + 1,
+      priority: primary ? rooms.indexOf(room) + 1 : null,
+      showLabel: primary,
       removeLabel: t(lang, "removeFromMap"),
-    }));
+    };
+  });
 
-  const unplaced = rooms.filter((room) => !blocks[room.id]);
+  const unplaced = rooms.filter((room) => !roomHasBlock(blocks, room.id));
 
   // Committing geometry also auto-merges any hallways that now form a clean
   // rectangle (drawn/dragged next to each other) — fused into one hall with

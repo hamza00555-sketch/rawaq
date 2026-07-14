@@ -119,19 +119,23 @@ function sanitizeEdges(b, rect) {
   return edges;
 }
 
-// Drop blocks for rooms that no longer exist (halls always stay), clamp
-// stray geometry, normalize wall edges. Pure + idempotent — safe to run
-// on every read instead of migrating.
+// Drop blocks whose owning room no longer exists, clamp stray geometry,
+// normalize wall edges, preserve the `room` grouping field. A legacy orphan
+// hall block (its own id is a hall, no `room` field) is kept so the mount
+// reconcile can promote it. Pure + idempotent — safe to run on every read.
 export function sanitizeMap(map, rooms) {
   const { cols, rows } = mapDims(map);
   const blocks = map?.blocks || {};
   const ids = new Set(rooms.map((r) => r.id));
   const clean = {};
   for (const [id, b] of Object.entries(blocks)) {
-    if ((!ids.has(id) && !isHall(id)) || !b) continue;
+    if (!b) continue;
+    const owner = ownerOf(id, b);
+    if (!ids.has(owner) && !(isHall(id) && !b.room)) continue;
     const rect = clampRect(b, cols, rows);
     const edges = sanitizeEdges(b, rect);
     if (edges.length) rect.edges = edges;
+    if (b.room) rect.room = b.room;
     // A clamped block that now overlaps an earlier one is dropped rather
     // than shuffled — the room just returns to the unplaced tray.
     if (!collides(clean, id, rect)) clean[id] = rect;
@@ -189,47 +193,169 @@ export function hallMergeRect(a, b) {
   return null;
 }
 
-// Auto-merge hallways drawn next to each other. Whenever two hall blocks form
-// a clean rectangle, fuse them into one hall: the earlier one (by rooms order)
-// keeps its id/name/emoji and absorbs the other's tasks; the other hall room
-// and its block are dropped. Repeats until nothing else merges (so a chain of
-// segments collapses fully). Only halls merge — real rooms are never touched.
-// Pure: returns the same rooms/blocks references when nothing changed.
-export function mergeConnectedHalls(rooms, blocks) {
-  let curRooms = rooms;
-  let curBlocks = blocks;
+// A hall can be more than one rectangle: extra segments are ordinary blocks
+// carrying a `room` field pointing at the owning hall. Everything else keys
+// a block by its room id, so ownerOf() is the single source of truth for
+// "which room does this block belong to".
+export const ownerOf = (id, b) => (b && b.room) || id;
+
+// All [id, block] pairs owned by a room, and whether the room has any block.
+export function roomBlocks(blocks, roomId) {
+  return Object.entries(blocks).filter(([id, b]) => ownerOf(id, b) === roomId);
+}
+export function roomHasBlock(blocks, roomId) {
+  return Object.keys(blocks).some((id) => ownerOf(id, blocks[id]) === roomId);
+}
+
+// Flatten placed blocks into one render entry per block, each tagged with its
+// owning room and whether it's that room's label-bearing segment (the block
+// keyed by the room id, else the first one). Views map these to their shapes.
+export function placedEntries(rooms, blocks) {
+  const known = new Set(rooms.map((r) => r.id));
+  const primary = new Map();
+  for (const [id, b] of Object.entries(blocks)) {
+    const owner = ownerOf(id, b);
+    if (!known.has(owner)) continue;
+    if (id === owner || !primary.has(owner)) primary.set(owner, id);
+  }
+  const out = [];
+  for (const [id, b] of Object.entries(blocks)) {
+    const owner = ownerOf(id, b);
+    if (!known.has(owner)) continue;
+    out.push({ blockId: id, roomId: owner, rect: b, primary: primary.get(owner) === id });
+  }
+  return out;
+}
+
+// Two hall segments are linked when they share a cell-edge with no wall marking
+// on it (a door/exit/opening on the shared boundary keeps them apart — that's
+// mom's intent). Corner-only touching (no shared edge) does not link.
+export function hallLink(a, b) {
+  if (a.x + a.w === b.x || b.x + b.w === a.x) {
+    const [left, right] = a.x + a.w === b.x ? [a, b] : [b, a];
+    const y0 = Math.max(a.y, b.y);
+    const y1 = Math.min(a.y + a.h, b.y + b.h);
+    for (let y = y0; y < y1; y++) {
+      const ld = (left.edges || []).some((e) => e.side === "e" && left.y + e.at === y);
+      const rd = (right.edges || []).some((e) => e.side === "w" && right.y + e.at === y);
+      if (!ld && !rd) return true;
+    }
+    return false;
+  }
+  if (a.y + a.h === b.y || b.y + b.h === a.y) {
+    const [top, bot] = a.y + a.h === b.y ? [a, b] : [b, a];
+    const x0 = Math.max(a.x, b.x);
+    const x1 = Math.min(a.x + a.w, b.x + b.w);
+    for (let x = x0; x < x1; x++) {
+      const td = (top.edges || []).some((e) => e.side === "s" && top.x + e.at === x);
+      const bd = (bot.edges || []).some((e) => e.side === "n" && bot.x + e.at === x);
+      if (!td && !bd) return true;
+    }
+    return false;
+  }
+  return false;
+}
+
+// Tidy a hall's geometry: collapse door-free segments that line up into one
+// rectangle (a straight run becomes a single block), leaving corners as their
+// own blocks. Segments carrying wall markings are left alone so their doors
+// survive. Keeps the block whose id is the room id (the label-bearing one).
+function simplifyHallBlocks(blocks) {
+  let map = blocks;
   for (;;) {
-    const hallIds = Object.keys(curBlocks).filter(isHall);
-    let didMerge = false;
-    for (let i = 0; i < hallIds.length && !didMerge; i++) {
-      for (let j = i + 1; j < hallIds.length; j++) {
-        const idA = hallIds[i];
-        const idB = hallIds[j];
-        const union = hallMergeRect(curBlocks[idA], curBlocks[idB]);
-        if (!union) continue;
-        const iA = curRooms.findIndex((r) => r.id === idA);
-        const iB = curRooms.findIndex((r) => r.id === idB);
-        // the earlier room wins; unknown ids (not yet in rooms) never win
-        const aFirst = iA !== -1 && (iB === -1 || iA <= iB);
-        const primary = aFirst ? idA : idB;
-        const absorbed = aFirst ? idB : idA;
-        const nextBlocks = { ...curBlocks, [primary]: union };
-        delete nextBlocks[absorbed];
-        const absorbedRoom = curRooms.find((r) => r.id === absorbed);
-        curRooms = curRooms
-          .map((r) => {
-            if (r.id !== primary) return r;
-            const have = new Set(r.tasks.map((t) => t.name.ar.trim()));
-            const extra = (absorbedRoom?.tasks || []).filter((t) => !have.has(t.name.ar.trim()));
-            return extra.length ? { ...r, tasks: [...r.tasks, ...extra] } : r;
-          })
-          .filter((r) => r.id !== absorbed);
-        curBlocks = nextBlocks;
-        didMerge = true;
+    const entries = Object.entries(map);
+    let merged = false;
+    for (let i = 0; i < entries.length && !merged; i++) {
+      for (let j = i + 1; j < entries.length; j++) {
+        const [idA, a] = entries[i];
+        const [idB, b] = entries[j];
+        const owner = ownerOf(idA, a);
+        if (owner !== ownerOf(idB, b) || !isHall(owner)) continue;
+        if ((a.edges && a.edges.length) || (b.edges && b.edges.length)) continue;
+        const u = hallMergeRect(a, b);
+        if (!u) continue;
+        const keepId = idB === owner ? idB : idA;
+        const dropId = keepId === idA ? idB : idA;
+        const next = { ...map, [keepId]: keepId === owner ? u : { ...u, room: owner } };
+        delete next[dropId];
+        map = next;
+        merged = true;
         break;
       }
     }
-    if (!didMerge) break;
+    if (!merged) return map;
   }
-  return { rooms: curRooms, blocks: curBlocks };
+}
+
+// Auto-merge connected hallways into ONE hall of any shape (L, U, …) — as long
+// as nothing (door/opening) sits between them. Halls whose segments touch on a
+// clear edge are grouped under the earliest one (by rooms order): the others'
+// segment blocks are re-owned to it and their tasks absorbed, the extra hall
+// rooms dropped. Straight door-free runs are then collapsed for a clean look.
+// Only halls are affected. Pure: same references back when nothing changed.
+export function mergeConnectedHalls(rooms, blocks) {
+  const hallIds = rooms.filter((r) => isHall(r.id)).map((r) => r.id);
+  const segs = new Map(hallIds.map((h) => [h, roomBlocks(blocks, h).map(([, b]) => b)]));
+  const parent = new Map(hallIds.map((h) => [h, h]));
+  const find = (x) => {
+    while (parent.get(x) !== x) {
+      parent.set(x, parent.get(parent.get(x)));
+      x = parent.get(x);
+    }
+    return x;
+  };
+  for (let i = 0; i < hallIds.length; i++) {
+    for (let j = i + 1; j < hallIds.length; j++) {
+      const A = segs.get(hallIds[i]);
+      const B = segs.get(hallIds[j]);
+      if (A.some((a) => B.some((b) => hallLink(a, b)))) {
+        parent.set(find(hallIds[i]), find(hallIds[j]));
+      }
+    }
+  }
+  const order = new Map(rooms.map((r, i) => [r.id, i]));
+  const comps = new Map();
+  for (const h of hallIds) {
+    const root = find(h);
+    if (!comps.has(root)) comps.set(root, []);
+    comps.get(root).push(h);
+  }
+
+  let curRooms = rooms;
+  let curBlocks = blocks;
+  let changed = false;
+  for (const members of comps.values()) {
+    if (members.length < 2) continue;
+    changed = true;
+    members.sort((a, b) => order.get(a) - order.get(b));
+    const primary = members[0];
+    const absorbed = new Set(members.slice(1));
+    curBlocks = Object.fromEntries(
+      Object.entries(curBlocks).map(([id, b]) =>
+        absorbed.has(ownerOf(id, b)) ? [id, { ...b, room: primary }] : [id, b]
+      )
+    );
+    const have = new Set();
+    const extra = [];
+    for (const r of curRooms) {
+      if (r.id === primary) r.tasks.forEach((t) => have.add(t.name.ar.trim()));
+    }
+    for (const r of curRooms) {
+      if (!absorbed.has(r.id)) continue;
+      for (const task of r.tasks) {
+        const k = task.name.ar.trim();
+        if (!have.has(k)) { have.add(k); extra.push(task); }
+      }
+    }
+    curRooms = curRooms
+      .map((r) => (r.id === primary && extra.length ? { ...r, tasks: [...r.tasks, ...extra] } : r))
+      .filter((r) => !absorbed.has(r.id));
+  }
+
+  const simplified = simplifyHallBlocks(curBlocks);
+  if (simplified !== curBlocks) {
+    curBlocks = simplified;
+    changed = true;
+  }
+  return changed ? { rooms: curRooms, blocks: curBlocks } : { rooms, blocks };
 }

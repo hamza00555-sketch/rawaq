@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { t } from "../i18n.js";
 import { makeHall } from "../data.js";
-import { newHallId } from "../houseMap.js";
+import { newHallId, ownerOf } from "../houseMap.js";
 import { press } from "../press.js";
 import PhotoUploader from "../components/PhotoUploader.jsx";
 import BottomSheet from "../components/BottomSheet.jsx";
@@ -177,6 +177,16 @@ export default function RoomsScreen({ lang, rooms, setRooms, houseMap, setHouseM
     const index = rooms.findIndex((r) => r.id === editorRoom.id);
     const removed = editorRoom;
     setRooms(rooms.filter((r) => r.id !== removed.id));
+    // drop the room's map blocks too (a hall may own several segments)
+    const blocks = houseMap?.blocks || {};
+    if (Object.keys(blocks).some((id) => ownerOf(id, blocks[id]) === removed.id)) {
+      setHouseMap({
+        ...houseMap,
+        blocks: Object.fromEntries(
+          Object.entries(blocks).filter(([id, b]) => ownerOf(id, b) !== removed.id)
+        ),
+      });
+    }
     setOpenRoomId(null);
     setSnack({
       message: t(lang, "roomDeleted"),

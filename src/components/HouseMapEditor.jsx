@@ -316,7 +316,9 @@ export default function HouseMapEditor({ entries, blocks, cols, rows, onChange, 
             onPointerCancel={handleCancel}
             onKeyDown={moveByKey(entry)}
           >
-            <BlockContent emoji={entry.emoji} name={entry.name} priority={entry.priority} />
+            {entry.showLabel !== false && (
+              <BlockContent emoji={entry.emoji} name={entry.name} priority={entry.priority} />
+            )}
             <EdgeMarks rect={rect} />
             {isSelected && !dragging && (
               <>

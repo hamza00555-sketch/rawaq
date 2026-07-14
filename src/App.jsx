@@ -219,7 +219,10 @@ function Household({
   useEffect(() => {
     const blocks = houseMap?.blocks || {};
     const known = new Set(rooms.map((r) => r.id));
-    const orphans = Object.keys(blocks).filter((id) => isHall(id) && !known.has(id));
+    // legacy orphan = a hall block that is its own room (no `room` group field)
+    const orphans = Object.keys(blocks).filter(
+      (id) => isHall(id) && !blocks[id].room && !known.has(id)
+    );
     const promoted = orphans.length ? [...rooms, ...orphans.map(makeHall)] : rooms;
     const merged = mergeConnectedHalls(promoted, blocks);
     if (merged.blocks !== blocks) setHouseMap({ ...houseMap, blocks: merged.blocks });
