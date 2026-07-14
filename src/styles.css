@@ -1068,26 +1068,28 @@ select.input { appearance: auto; }
 }
 .map-edge.edge-door {
   background: var(--door);
-  box-shadow: 0 0 0 2px var(--bg);
+  box-shadow: 0 0 0 1.5px var(--bg);
 }
 .map-edge.edge-exit {
   background: var(--success);
-  box-shadow: 0 0 0 2px var(--bg), 0 0 10px var(--success);
+  box-shadow: 0 0 0 1.5px var(--bg), 0 0 8px var(--success);
 }
 .map-edge.edge-open {
   background: var(--surface-solid);
   opacity: 0.92;
 }
 
-/* Editor: one tappable dot per wall segment of the selected block */
+/* Editor: one tappable dot per wall segment of the selected block. Kept
+   small so it isn't intrusive and the corner controls (delete / resize)
+   stay reachable — those sit above the dots (higher z-index). */
 .map-edge-dot {
   position: absolute;
-  width: 30px;
-  height: 30px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   border: none;
   background: transparent;
-  z-index: 6;
+  z-index: 4;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1095,11 +1097,11 @@ select.input { appearance: auto; }
 }
 .map-edge-dot::after {
   content: "";
-  width: 15px;
-  height: 15px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: var(--surface-solid);
-  border: 2px dashed var(--text-2);
+  border: 1.5px dashed var(--text-2);
   box-sizing: border-box;
   box-shadow: var(--shadow);
 }
@@ -1198,7 +1200,7 @@ select.input { appearance: auto; }
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 5;
+  z-index: 7;
   touch-action: none;
 }
 .map-resize-handle::after {
@@ -1220,7 +1222,7 @@ select.input { appearance: auto; }
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 5;
+  z-index: 7;
   border: none;
   background: transparent;
   padding: 0;

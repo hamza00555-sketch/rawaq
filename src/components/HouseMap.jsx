@@ -17,11 +17,11 @@ export function edgeStyle(rect, { side, at, kind }) {
   const horizontal = side === "n" || side === "s";
   const len = horizontal ? rect.w : rect.h;
   const along = `${((at + 0.5) / len) * 100}%`;
-  const size = `${(kind === "open" ? 90 : 62) / len}%`;
-  const thick = kind === "open" ? 11 : 8;
+  const size = `${(kind === "open" ? 84 : 50) / len}%`;
+  const thick = kind === "open" ? 8 : 5;
   return horizontal
-    ? { left: along, transform: "translateX(-50%)", width: size, height: thick, [side === "n" ? "top" : "bottom"]: -5 }
-    : { top: along, transform: "translateY(-50%)", height: size, width: thick, [side === "e" ? "right" : "left"]: -5 };
+    ? { left: along, transform: "translateX(-50%)", width: size, height: thick, [side === "n" ? "top" : "bottom"]: -4 }
+    : { top: along, transform: "translateY(-50%)", height: size, width: thick, [side === "e" ? "right" : "left"]: -4 };
 }
 
 export function BlockContent({ emoji, name, priority }) {
