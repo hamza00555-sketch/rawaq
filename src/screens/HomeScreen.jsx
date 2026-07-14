@@ -3,6 +3,7 @@ import { t } from "../i18n.js";
 import { formatDate } from "../data.js";
 import { press } from "../press.js";
 import { isHall, mapDims, roomDone, sanitizeMap } from "../houseMap.js";
+import { useCelebration } from "../useCelebration.js";
 import ProgressRing from "../components/ProgressRing.jsx";
 import HouseMap from "../components/HouseMap.jsx";
 import RawaqLogo from "../components/RawaqLogo.jsx";
@@ -18,6 +19,7 @@ export default function HomeScreen({ lang, owner, today, rooms, setRooms, houseM
   const done = today.tasks.filter((x) => x.done).length;
   const percent = total ? Math.round((done / total) * 100) : 0;
   const complete = total > 0 && done === total;
+  const celebrate = useCelebration(complete);
   const lastVisit = history[history.length - 1];
 
   // Mom's own live map preview: same read-only renderer the worker sees,
@@ -78,7 +80,7 @@ export default function HomeScreen({ lang, owner, today, rooms, setRooms, houseM
         </div>
       </section>
 
-      {complete && (
+      {celebrate && (
         <div className="card center-text congrats celebrate-pop" role="status" style={{ marginTop: 14 }}>
           <img src="/illustrations/celebrate.webp" alt="" className="celebrate-illus" />
           <p>{t(lang, "congrats100")}</p>

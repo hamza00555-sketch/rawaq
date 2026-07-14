@@ -6,6 +6,7 @@ import DraggableTaskList from "../components/DraggableTaskList.jsx";
 import AddTodayTaskSheet from "../components/AddTodayTaskSheet.jsx";
 import Snackbar from "../components/Snackbar.jsx";
 import Icon from "../components/Icons.jsx";
+import { useCelebration } from "../useCelebration.js";
 
 export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisit }) {
   const [addOpen, setAddOpen] = useState(false);
@@ -15,6 +16,7 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
 
   const total = today.tasks.length;
   const done = today.tasks.filter((x) => x.done).length;
+  const celebrate = useCelebration(total > 0 && done === total);
 
   // Today's list grouped under its rooms (rooms order; roomless extras last)
   const groups = useMemo(() => {
@@ -148,7 +150,7 @@ export default function TodayScreen({ lang, today, setToday, rooms, onFinishVisi
         <Icon name="plus" size={20} /> {t(lang, "addTodayTask")}
       </button>
 
-      {total > 0 && done === total && (
+      {celebrate && (
         <div className="card center-text congrats celebrate-pop" style={{ marginTop: 14 }}>
           <img src="/illustrations/celebrate.webp" alt="" className="celebrate-illus" />
           <p>{t(lang, "allDone")}</p>

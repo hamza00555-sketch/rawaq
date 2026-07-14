@@ -4,6 +4,7 @@ import { formatDate } from "../data.js";
 import { press } from "../press.js";
 import { fetchShare, updateShareTasks } from "../shares.js";
 import { roomDone } from "../houseMap.js";
+import { useCelebration } from "../useCelebration.js";
 import HouseMap from "../components/HouseMap.jsx";
 import RawaqLogo from "../components/RawaqLogo.jsx";
 import Icon from "../components/Icons.jsx";
@@ -56,6 +57,7 @@ export default function WorkerView({ payload, shortId }) {
   const done = tasks.filter((x) => x.done).length;
   const percent = total ? Math.round((done / total) * 100) : 0;
   const complete = total > 0 && done === total;
+  const celebrate = useCelebration(complete);
 
   const toggle = (task) => {
     const next = tasks.map((x) => (x.id === task.id ? { ...x, done: !x.done } : x));
@@ -167,7 +169,7 @@ export default function WorkerView({ payload, shortId }) {
           </div>
         </div>
 
-        {complete && (
+        {celebrate && (
           <div className="card center-text congrats celebrate-pop" style={{ marginBottom: 18, fontSize: 22 }} role="status">
             {tw("workerCongrats")}
           </div>
