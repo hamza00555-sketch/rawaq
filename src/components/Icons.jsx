@@ -57,6 +57,7 @@ const PATHS = {
   ),
   "chevron-left": <path d="M14.5 6L8.5 12l6 6" />,
   "chevron-right": <path d="M9.5 6l6 6-6 6" />,
+  "chevron-down": <path d="M6 9.5l6 6 6-6" />,
   check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
   "check-circle": (
     <>

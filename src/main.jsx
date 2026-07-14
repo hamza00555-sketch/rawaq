@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
+import { ensureHomes } from "./homes.js";
 import "./styles.css";
 
 // Full data reset requested from Settings: wipe happens here, before React
@@ -11,5 +12,9 @@ if (sessionStorage.getItem("rawaq_reset") === "1") {
     .filter((key) => key.startsWith("rawaq_"))
     .forEach((key) => localStorage.removeItem(key));
 }
+
+// Migrate a legacy single-home install into the multi-home layout (and
+// seed the registry for fresh installs) before anything reads storage.
+ensureHomes();
 
 createRoot(document.getElementById("root")).render(<App />);

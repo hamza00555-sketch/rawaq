@@ -8,12 +8,34 @@ import ProgressRing from "../components/ProgressRing.jsx";
 import HouseMap from "../components/HouseMap.jsx";
 import RawaqLogo from "../components/RawaqLogo.jsx";
 import CreateTaskSheet from "../components/CreateTaskSheet.jsx";
+import HomeSwitcher from "../components/HomeSwitcher.jsx";
 import Snackbar from "../components/Snackbar.jsx";
 import Icon from "../components/Icons.jsx";
 
-export default function HomeScreen({ lang, owner, today, rooms, setRooms, houseMap, history, onShare, onOpenMap, nextVisit }) {
+export default function HomeScreen({
+  lang,
+  owner,
+  today,
+  rooms,
+  setRooms,
+  houseMap,
+  history,
+  onShare,
+  onOpenMap,
+  nextVisit,
+  homes,
+  activeHome,
+  onSwitchHome,
+  onAddHome,
+  onRenameHome,
+  onDeleteHome,
+}) {
   const [createOpen, setCreateOpen] = useState(false);
+  const [homesOpen, setHomesOpen] = useState(false);
   const [snack, setSnack] = useState(null);
+
+  const currentHome = homes?.find((h) => h.id === activeHome);
+  const multiHome = homes && homes.length > 1;
 
   const total = today.tasks.length;
   const done = today.tasks.filter((x) => x.done).length;
@@ -61,6 +83,18 @@ export default function HomeScreen({ lang, owner, today, rooms, setRooms, houseM
             </p>
           </div>
         </div>
+        {homes && (
+          <button
+            type="button"
+            className="home-switch-btn"
+            aria-label={t(lang, "myHomes")}
+            {...press(() => setHomesOpen(true))}
+          >
+            <Icon name="home" size={18} />
+            <span>{currentHome?.name || t(lang, "myHomes")}</span>
+            {multiHome && <Icon name="chevron-down" size={16} />}
+          </button>
+        )}
       </header>
 
       {/* Compact progress summary — a small ring beside the counts so the
@@ -131,6 +165,20 @@ export default function HomeScreen({ lang, owner, today, rooms, setRooms, houseM
         setRooms={setRooms}
         onAdded={() => setSnack({ message: t(lang, "taskAdded") })}
       />
+
+      {homes && (
+        <HomeSwitcher
+          open={homesOpen}
+          onClose={() => setHomesOpen(false)}
+          lang={lang}
+          homes={homes}
+          activeHome={activeHome}
+          onSwitch={onSwitchHome}
+          onAdd={onAddHome}
+          onRename={onRenameHome}
+          onDelete={onDeleteHome}
+        />
+      )}
 
       <Snackbar snack={snack} onDismiss={() => setSnack(null)} />
     </div>

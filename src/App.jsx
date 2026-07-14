@@ -10,7 +10,15 @@ import {
   taskFingerprint,
   todayStr,
 } from "./data.js";
-import { useStoredState } from "./storage.js";
+import { load, useStoredState } from "./storage.js";
+import {
+  ACTIVE_KEY,
+  HOMES_KEY,
+  ONBOARDED_KEY,
+  homeKey,
+  newHomeId,
+  removeHomeData,
+} from "./homes.js";
 import { decodeWorkerHash } from "./share.js";
 import { parseShortHash } from "./shares.js";
 import { useShareSync } from "./useShareSync.js";
@@ -35,31 +43,21 @@ export default function App() {
   return <MainApp />;
 }
 
+// App-wide shell: global preferences, the home registry, splash and
+// onboarding. Per-home data lives in <Household>, keyed by the active
+// home so switching fully remounts it against the new namespace.
 function MainApp() {
-  // Captured before useStoredState writes the key on first render.
-  const [firstRun, setFirstRun] = useState(
-    () => localStorage.getItem(STORAGE_KEYS.owner) == null
-  );
+  const [onboarded, setOnboarded] = useState(() => localStorage.getItem(ONBOARDED_KEY) != null);
 
   const [lang, setLang] = useStoredState(STORAGE_KEYS.lang, "ar");
   const [theme, setTheme] = useStoredState(STORAGE_KEYS.theme, "light");
   const [uiSize, setUiSize] = useStoredState(STORAGE_KEYS.uiSize, "normal");
-  const [rooms, setRooms] = useStoredState(STORAGE_KEYS.rooms, DEFAULT_ROOMS, migrateRooms);
-  const [owner, setOwner] = useStoredState(STORAGE_KEYS.owner, "");
-  const [today, setToday] = useStoredState(STORAGE_KEYS.today, null);
-  const [history, setHistory] = useStoredState(STORAGE_KEYS.history, []);
-  const [lastShare, setLastShare] = useStoredState(STORAGE_KEYS.lastShare, null);
-  const [taskLog, setTaskLog] = useStoredState(STORAGE_KEYS.taskLog, {});
-  const [contract, setContract] = useStoredState(STORAGE_KEYS.contract, null);
-  const [houseMap, setHouseMap] = useStoredState(STORAGE_KEYS.houseMap, { blocks: {} });
-  const [workerLang, setWorkerLang] = useStoredState(STORAGE_KEYS.workerLang, "fil");
+  const [homes, setHomes] = useStoredState(HOMES_KEY, [{ id: "default", name: "بيتي" }]);
+  const [activeHome, setActiveHome] = useStoredState(ACTIVE_KEY, "default");
 
-  const [tab, setTab] = useState("home");
   const [splash, setSplash] = useState(true);
   const [splashLeaving, setSplashLeaving] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
 
-  // Splash: ~1.6s then fade out
   useEffect(() => {
     const t1 = setTimeout(() => setSplashLeaving(true), 1600);
     const t2 = setTimeout(() => setSplash(false), 1950);
@@ -69,11 +67,103 @@ function MainApp() {
     };
   }, []);
 
-  // RTL/LTR + lang attribute follow the selected language
   useEffect(() => {
     document.documentElement.dir = LANGS[lang]?.dir || "rtl";
     document.documentElement.lang = lang;
   }, [lang]);
+
+  const shell = (children) => (
+    <div className={`app rawaq-${theme}${uiSize === "large" ? " ui-large" : ""}`}>{children}</div>
+  );
+
+  if (splash) {
+    return shell(
+      <SplashScreen lang={lang} owner={load(homeKey(activeHome, "owner"), "")} leaving={splashLeaving} />
+    );
+  }
+
+  if (!onboarded) {
+    return shell(
+      <WelcomeScreen
+        lang={lang}
+        onDone={(name) => {
+          // seed the first home's owner directly, then let Household mount
+          localStorage.setItem(homeKey(activeHome, "owner"), JSON.stringify(name.trim()));
+          localStorage.setItem(ONBOARDED_KEY, "1");
+          setOnboarded(true);
+        }}
+      />
+    );
+  }
+
+  const switchHome = (id) => setActiveHome(id);
+
+  const addHome = (name) => {
+    const id = newHomeId();
+    setHomes([...homes, { id, name: name.trim() || t(lang, "newHome") }]);
+    setActiveHome(id);
+  };
+
+  const renameHome = (id, name) =>
+    setHomes(homes.map((h) => (h.id === id ? { ...h, name: name.trim() || h.name } : h)));
+
+  const deleteHome = (id) => {
+    if (homes.length <= 1) return;
+    const next = homes.filter((h) => h.id !== id);
+    removeHomeData(id);
+    setHomes(next);
+    if (activeHome === id) setActiveHome(next[0].id);
+  };
+
+  return shell(
+    <Household
+      key={activeHome}
+      homeId={activeHome}
+      lang={lang}
+      setLang={setLang}
+      theme={theme}
+      setTheme={setTheme}
+      uiSize={uiSize}
+      setUiSize={setUiSize}
+      homes={homes}
+      activeHome={activeHome}
+      onSwitchHome={switchHome}
+      onAddHome={addHome}
+      onRenameHome={renameHome}
+      onDeleteHome={deleteHome}
+    />
+  );
+}
+
+// One household's screens. All per-home state is keyed off homeId, so
+// remounting (via the key in MainApp) reloads a different home cleanly.
+function Household({
+  homeId,
+  lang,
+  setLang,
+  theme,
+  setTheme,
+  uiSize,
+  setUiSize,
+  homes,
+  activeHome,
+  onSwitchHome,
+  onAddHome,
+  onRenameHome,
+  onDeleteHome,
+}) {
+  const [rooms, setRooms] = useStoredState(homeKey(homeId, "rooms"), DEFAULT_ROOMS, migrateRooms);
+  const [owner, setOwner] = useStoredState(homeKey(homeId, "owner"), "");
+  const [today, setToday] = useStoredState(homeKey(homeId, "today"), null);
+  const [history, setHistory] = useStoredState(homeKey(homeId, "history"), []);
+  const [lastShare, setLastShare] = useStoredState(homeKey(homeId, "lastShare"), null);
+  const [taskLog, setTaskLog] = useStoredState(homeKey(homeId, "taskLog"), {});
+  const [contract, setContract] = useStoredState(homeKey(homeId, "contract"), null);
+  const [houseMap, setHouseMap] = useStoredState(homeKey(homeId, "houseMap"), { blocks: {} });
+  const [workerLang, setWorkerLang] = useStoredState(homeKey(homeId, "workerLang"), "fil");
+
+  const [tab, setTab] = useState("home");
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Keep today's list in sync with the date, the rooms and the completion
   // log (due engine). skipped ids and mom's extras carry over via buildToday.
@@ -101,8 +191,6 @@ function MainApp() {
     if (!today) return;
     const total = today.tasks.length;
     const doneTasks = today.tasks.filter((x) => x.done);
-    // Log completions first — the due engine hides them until next period.
-    // React 18 batches all three sets into one sync-effect pass.
     setTaskLog({
       ...taskLog,
       ...Object.fromEntries(doneTasks.map((x) => [x.id, today.date])),
@@ -120,34 +208,11 @@ function MainApp() {
     setToday({ ...today, tasks: today.tasks.map((x) => ({ ...x, done: false })) });
   };
 
-  if (splash) {
-    return (
-      <div className={`app rawaq-${theme}${uiSize === "large" ? " ui-large" : ""}`}>
-        <SplashScreen lang={lang} owner={owner} leaving={splashLeaving} />
-      </div>
-    );
-  }
-
-  if (firstRun) {
-    return (
-      <div className={`app rawaq-${theme}${uiSize === "large" ? " ui-large" : ""}`}>
-        <WelcomeScreen
-          lang={lang}
-          onDone={(name) => {
-            setOwner(name);
-            setFirstRun(false);
-          }}
-        />
-      </div>
-    );
-  }
-
   const safeToday = today || { date: todayStr(), skipped: [], extras: [], tasks: [] };
 
   const needsReshare =
     lastShare?.date === todayStr() && taskFingerprint(safeToday.tasks) !== lastShare.fingerprint;
 
-  // One banner at a time: visit today (not shared) > visit tomorrow > tasks changed
   const nextVisit = nextVisitDate(contract);
   const banner =
     nextVisit === todayStr() && lastShare?.date !== todayStr()
@@ -161,7 +226,7 @@ function MainApp() {
   const showShareUi = tab === "home" || tab === "today";
 
   return (
-    <div className={`app rawaq-${theme}${uiSize === "large" ? " ui-large" : ""}`}>
+    <>
       {tab === "home" && (
         <HomeScreen
           lang={lang}
@@ -174,6 +239,12 @@ function MainApp() {
           onShare={() => setShareOpen(true)}
           onOpenMap={() => setTab("rooms")}
           nextVisit={nextVisit}
+          homes={homes}
+          activeHome={activeHome}
+          onSwitchHome={onSwitchHome}
+          onAddHome={onAddHome}
+          onRenameHome={onRenameHome}
+          onDeleteHome={onDeleteHome}
         />
       )}
       {tab === "today" && (
@@ -239,6 +310,6 @@ function MainApp() {
         lastShare={lastShare}
         onShared={setLastShare}
       />
-    </div>
+    </>
   );
 }

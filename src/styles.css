@@ -1343,3 +1343,60 @@ select.input { appearance: auto; }
   border-radius: var(--radius);
   border: 1px solid var(--glass-border);
 }
+
+/* Home switcher (multi-home) */
+.home-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 44%;
+  padding: 7px 12px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-hilite);
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.home-switch-btn span {
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-switch-btn:active { transform: scale(0.96); }
+
+.home-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.home-pick {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: start;
+}
+.home-pick.active {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.home-pick span {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

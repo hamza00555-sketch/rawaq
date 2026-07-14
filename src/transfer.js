@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from "./data.js";
+import { homeKey, readActiveHome } from "./homes.js";
 
 // Move a household to another phone: pack the home data into one opaque,
 // copy-pasteable code that survives WhatsApp/Notes. The JSON is deflated
@@ -8,7 +9,8 @@ import { STORAGE_KEYS } from "./data.js";
 // rooms, tasks, contract, worker language, log, preferences) travels.
 const CPREFIX = "RQ1:"; // compressed
 const PREFIX = "RAWAQ-HOME-1:"; // legacy plain base64 (still importable)
-const KEYS = ["rooms", "houseMap", "owner", "contract", "workerLang", "taskLog", "lang", "theme", "uiSize"];
+// Per-home fields only (language/theme/size are device-level, not a home).
+const KEYS = ["rooms", "houseMap", "owner", "contract", "workerLang", "taskLog"];
 
 // Unicode-safe base64 for the plain fallback path.
 const b64encode = (str) => btoa(unescape(encodeURIComponent(str)));
@@ -41,9 +43,10 @@ async function inflate(b64) {
 }
 
 function buildJson() {
+  const home = readActiveHome();
   const keys = {};
   for (const k of KEYS) {
-    const raw = localStorage.getItem(STORAGE_KEYS[k]);
+    const raw = localStorage.getItem(homeKey(home, k));
     if (raw != null) keys[k] = raw; // keep the stored JSON strings verbatim
   }
   if (keys.rooms) {
@@ -98,12 +101,14 @@ export async function parseHome(code) {
   return obj.keys;
 }
 
-// Overwrite local storage with an imported set, then the caller reloads.
+// Overwrite the ACTIVE home's storage with an imported set, then the
+// caller reloads. (KEYS are the per-home fields; namespaced by home.)
 export function applyHome(keys) {
+  const home = readActiveHome();
   for (const [k, raw] of Object.entries(keys)) {
-    if (STORAGE_KEYS[k] && typeof raw === "string") localStorage.setItem(STORAGE_KEYS[k], raw);
+    if (KEYS.includes(k) && typeof raw === "string") localStorage.setItem(homeKey(home, k), raw);
   }
   // today's list is derived from rooms + log — clear it so it rebuilds fresh
-  localStorage.removeItem(STORAGE_KEYS.today);
-  localStorage.removeItem(STORAGE_KEYS.lastShare);
+  localStorage.removeItem(homeKey(home, "today"));
+  localStorage.removeItem(homeKey(home, "lastShare"));
 }

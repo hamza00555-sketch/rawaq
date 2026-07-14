@@ -1,13 +1,13 @@
 import { useEffect, useRef } from "react";
 import { t } from "../i18n.js";
-import { STORAGE_KEYS } from "../data.js";
+import { homeKey, readActiveHome } from "../homes.js";
 import { useAutoTranslate } from "../translate.js";
 
-// Read once per mount (sheets remount per open via key): the worker's
-// language, picked by mom in Settings. Not reactive on purpose.
+// Read once per mount (sheets remount per open via key): the active
+// home's worker language, picked by mom in Settings. Not reactive.
 export function getWorkerLang() {
   try {
-    const v = JSON.parse(localStorage.getItem(STORAGE_KEYS.workerLang));
+    const v = JSON.parse(localStorage.getItem(homeKey(readActiveHome(), "workerLang")));
     return ["ar", "en", "fil", "id"].includes(v) ? v : "fil";
   } catch {
     return "fil";
