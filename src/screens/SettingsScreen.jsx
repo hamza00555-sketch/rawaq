@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { LANGS, WORKER_LANGS, t } from "../i18n.js";
 import { contractEnd, formatDate, isContractExpired, nextVisitDate, remainingVisits, todayStr } from "../data.js";
 import { press } from "../press.js";
+import { applyHome, exportHome, parseHome } from "../transfer.js";
+import BottomSheet from "../components/BottomSheet.jsx";
 import Icon from "../components/Icons.jsx";
 
 // 2023-01-01 was a Sunday — reference week for localized weekday names.
@@ -25,7 +27,47 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
   const [nameDraft, setNameDraft] = useState(owner);
   const [savedMsg, setSavedMsg] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importCode, setImportCode] = useState("");
+  const [importErr, setImportErr] = useState(false);
+  const [confirmRestore, setConfirmRestore] = useState(false);
   const firstRender = useRef(true);
+
+  // Copy needs real transient activation (clipboard) — native onClick.
+  const copyHomeData = async () => {
+    const code = exportHome();
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  const restore = () => {
+    let keys;
+    try {
+      keys = parseHome(importCode);
+    } catch {
+      setImportErr(true);
+      setConfirmRestore(false);
+      return;
+    }
+    if (!confirmRestore) {
+      setImportErr(false);
+      setConfirmRestore(true);
+      return;
+    }
+    applyHome(keys);
+    window.location.replace(window.location.pathname);
+  };
 
   // Auto-save the name (debounced) — no Save button.
   useEffect(() => {
@@ -261,6 +303,59 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
           ))}
         </div>
       )}
+
+      <h2 className="section-title">{t(lang, "transferTitle")}</h2>
+      <div className="card stack">
+        <p className="muted" style={{ fontSize: 13 }}>{t(lang, "transferHint")}</p>
+        <button type="button" className="btn btn-soft btn-block" onClick={copyHomeData}>
+          {copied ? t(lang, "homeDataCopied") : (<><Icon name="link" size={20} /> {t(lang, "copyHomeData")}</>)}
+        </button>
+        <button
+          type="button"
+          className="btn btn-block"
+          {...press(() => {
+            setImportCode("");
+            setImportErr(false);
+            setConfirmRestore(false);
+            setImportOpen(true);
+          })}
+        >
+          <Icon name="refresh" size={20} /> {t(lang, "importHomeData")}
+        </button>
+        <p className="muted" style={{ fontSize: 12 }}>{t(lang, "transferNoPhotos")}</p>
+      </div>
+
+      <BottomSheet open={importOpen} onClose={() => setImportOpen(false)} title={t(lang, "importHomeData")}>
+        <div className="stack">
+          <textarea
+            className="input"
+            dir="ltr"
+            rows={5}
+            style={{ resize: "none", fontFamily: "monospace", fontSize: 13, wordBreak: "break-all" }}
+            value={importCode}
+            onChange={(e) => {
+              setImportCode(e.target.value);
+              setImportErr(false);
+              setConfirmRestore(false);
+            }}
+            placeholder={t(lang, "pasteCodeHere")}
+          />
+          {importErr && (
+            <p role="alert" style={{ color: "var(--danger)", fontWeight: 600, fontSize: 14 }}>
+              {t(lang, "invalidCode")}
+            </p>
+          )}
+          <button
+            type="button"
+            className={`btn btn-block ${confirmRestore ? "btn-danger" : "btn-primary"}`}
+            disabled={!importCode.trim()}
+            style={!importCode.trim() ? { opacity: 0.5 } : undefined}
+            {...press(restore)}
+          >
+            {confirmRestore ? t(lang, "restoreConfirm") : t(lang, "restore")}
+          </button>
+        </div>
+      </BottomSheet>
 
       <h2 className="section-title" style={{ color: "var(--danger)" }}>{t(lang, "dangerZone")}</h2>
       <div className="card">
