@@ -41,8 +41,8 @@ const fetchOpts = () =>
     ? { signal: AbortSignal.timeout(7000) }
     : {};
 
-async function viaGoogle(text, target) {
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ar&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+async function viaGoogle(text, target, source) {
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${source}&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
   const res = await fetch(url, fetchOpts());
   if (!res.ok) throw new Error(`gtx ${res.status}`);
   const data = await res.json();
@@ -54,8 +54,8 @@ async function viaGoogle(text, target) {
   return out;
 }
 
-async function viaMyMemory(text, target) {
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=ar|${target}`;
+async function viaMyMemory(text, target, source) {
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${source}|${target}`;
   const res = await fetch(url, fetchOpts());
   if (!res.ok) throw new Error(`mymemory ${res.status}`);
   const data = await res.json();
@@ -66,31 +66,39 @@ async function viaMyMemory(text, target) {
   return out;
 }
 
-async function translateTo(text, target) {
+async function translateTo(text, target, source) {
   try {
-    return await viaGoogle(text, target);
+    return await viaGoogle(text, target, source);
   } catch {
-    return await viaMyMemory(text, target);
+    return await viaMyMemory(text, target, source);
   }
 }
 
-// → {en, fil, id} (any may be "" on failure). Filipino = "tl" upstream,
-// Indonesian = "id". Cache entries from before Indonesian existed lack
-// .id and are treated as misses so they refresh once.
-export async function translateAr(text) {
+// The three name fields and their upstream locale codes.
+const FIELD_LOCALE = { en: "en", fil: "tl", id: "id" };
+
+// Translate `text` FROM `source` (ar|en|tl|id) into {en, fil, id}. The
+// field matching the source is passed through unchanged (no self-
+// translate). Any target may be "" on failure. Cached per source+text.
+export async function translateName(text, source = "ar") {
   const key = text.trim();
   if (!key) return { en: "", fil: "", id: "" };
-  const hit = cache()[key];
+  const ck = source === "ar" ? key : `${source}|${key}`;
+  const hit = cache()[ck];
   if (hit && hit.id !== undefined) return hit;
-  const [en, fil, id] = await Promise.allSettled([
-    translateTo(key, "en"),
-    translateTo(key, "tl"),
-    translateTo(key, "id"),
-  ]).then((r) => r.map((x) => (x.status === "fulfilled" ? x.value : "")));
-  const result = { en, fil, id };
-  if (en && fil && id) remember(key, result);
+  const fields = ["en", "fil", "id"];
+  const parts = await Promise.allSettled(
+    fields.map((f) =>
+      FIELD_LOCALE[f] === source ? Promise.resolve(key) : translateTo(key, FIELD_LOCALE[f], source)
+    )
+  ).then((r) => r.map((x) => (x.status === "fulfilled" ? x.value : "")));
+  const result = { en: parts[0], fil: parts[1], id: parts[2] };
+  if (result.en && result.fil && result.id) remember(ck, result);
   return result;
 }
+
+// Back-compat: Arabic-sourced translation.
+export const translateAr = (text) => translateName(text, "ar");
 
 // Save-time safety net: the live fill can miss (mid-typing request
 // failed or is still in flight when mom hits save), so any name field
@@ -116,9 +124,9 @@ export async function finalizeName(ar, en, fil, id = "") {
   return { ar, en: en || ar, fil: fil || ar, id: id || ar };
 }
 
-// Debounced live translation of an Arabic string as it's typed.
-// Pass "" to idle (empty input, or edit sheets before the name changes).
-export function useAutoTranslate(text) {
+// Debounced live translation of a name string as it's typed, FROM the
+// given source language (default Arabic). Pass "" to idle.
+export function useAutoTranslate(text, source = "ar") {
   const [state, setState] = useState({ en: "", fil: "", id: "", busy: false, failed: false });
 
   useEffect(() => {
@@ -133,7 +141,7 @@ export function useAutoTranslate(text) {
     // consumers re-apply even when the new translation is identical.
     setState({ en: "", fil: "", id: "", busy: true, failed: false });
     const timer = setTimeout(() => {
-      translateAr(key).then(({ en, fil, id }) => {
+      translateName(key, source).then(({ en, fil, id }) => {
         if (!cancelled) setState({ en, fil, id, busy: false, failed: !en && !fil && !id });
       });
     }, 500);
@@ -141,7 +149,7 @@ export function useAutoTranslate(text) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [text]);
+  }, [text, source]);
 
   return state;
 }

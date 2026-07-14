@@ -46,9 +46,18 @@ export default function TrilingualNameFields({
   // A translation slot is "missing" when empty OR still holding the
   // Arabic text (the old save-fallback).
   const missing = (key) => !values[key].trim() || values[key].trim() === ar.trim();
+
+  // If the mom corrected the English by hand, the auto-translation from
+  // Arabic was clearly off — so the worker-language field re-translates
+  // from her corrected English instead. English becomes the source.
+  const fromEnglish = manual.current.en && en.trim().length > 0;
+
   const needsFill = ["en", "fil", "id"].some((key) => missing(key) && !manual.current[key]);
-  const armed = ar.trim() && (ar.trim() !== initialAr.trim() || needsFill) ? ar : "";
-  const tr = useAutoTranslate(armed);
+  const arArmed = !fromEnglish && ar.trim() && (ar.trim() !== initialAr.trim() || needsFill) ? ar : "";
+  const tr = useAutoTranslate(arArmed, "ar");
+
+  const enArmed = fromEnglish ? en : "";
+  const trEn = useAutoTranslate(enArmed, "en");
 
   // The Arabic changed → any auto-filled translation is now stale. Clear
   // it (manual text stays) so a failed mid-typing request can never
@@ -65,12 +74,25 @@ export default function TrilingualNameFields({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ar]);
 
+  // Arabic-sourced fills (only into missing, non-manual fields).
   useEffect(() => {
     for (const key of ["en", "fil", "id"]) {
       if (tr[key] && !manual.current[key] && missing(key)) setters[key](tr[key]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tr.en, tr.fil, tr.id]);
+
+  // English-sourced fills: the worker-language fields follow the corrected
+  // English (overriding a bad Arabic-derived value), unless hand-edited.
+  useEffect(() => {
+    for (const key of ["fil", "id"]) {
+      if (trEn[key] && !manual.current[key]) setters[key](trEn[key]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trEn.fil, trEn.id]);
+
+  const busy = tr.busy || trEn.busy;
+  const failed = (arArmed && tr.failed) || (enArmed && trEn.failed);
 
   const workerInput = (key, placeholderKey) => (
     <input
@@ -98,11 +120,11 @@ export default function TrilingualNameFields({
         className="muted translate-hint"
         role="status"
         aria-live="polite"
-        style={tr.failed && !tr.busy ? { color: "var(--danger)" } : undefined}
+        style={failed && !busy ? { color: "var(--danger)" } : undefined}
       >
-        {tr.busy
+        {busy
           ? `🌐 ${t(lang, "translating")}`
-          : tr.failed && armed
+          : failed
             ? `🌐 ${t(lang, "translateFailed")}`
             : " "}
       </p>
