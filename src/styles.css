@@ -1400,3 +1400,48 @@ select.input { appearance: auto; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* House linking row inside the switcher */
+.home-link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  flex-wrap: wrap;
+  padding: 2px 2px 0;
+}
+.house-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.house-code code {
+  font-family: monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: var(--text);
+}
+.house-code .muted { font-size: 11px; }
+.btn-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  padding: 4px 6px;
+}
+.btn-text:disabled { opacity: 0.5; }
+.btn-text-danger {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger);
+  padding: 4px 6px;
+}

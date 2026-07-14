@@ -1,6 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Short worker links (task lists shared with the cleaner).
     match /shares/{id} {
       allow get: if true;
       allow list: if false;
@@ -12,6 +13,18 @@ service cloud.firestore {
                         .hasOnly(['tasks', 'updatedAt'])
                     && request.resource.data.tasks is list
                     && request.resource.data.tasks.size() <= 200;
+      allow delete: if false;
+    }
+
+    // Linked homes: anyone holding the code (the doc id) can read/write it.
+    // The code is a shared secret, like a Wi-Fi password — enough for a
+    // family. Capped at ~900KB to stay under the 1MB document limit.
+    match /houses/{code} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if request.resource.data.size() < 900000
+                            && (!('rooms' in request.resource.data)
+                                || request.resource.data.rooms is list);
       allow delete: if false;
     }
   }

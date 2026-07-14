@@ -17,11 +17,15 @@ import {
   ONBOARDED_KEY,
   homeKey,
   newHomeId,
+  readHomeDef,
   removeHomeData,
+  writeHomeDef,
 } from "./homes.js";
+import { fetchHouse, newHouseCode, pushHouse } from "./house.js";
 import { decodeWorkerHash } from "./share.js";
 import { parseShortHash } from "./shares.js";
 import { useShareSync } from "./useShareSync.js";
+import { useHouseSync } from "./useHouseSync.js";
 
 import SplashScreen from "./screens/SplashScreen.jsx";
 import WelcomeScreen from "./screens/WelcomeScreen.jsx";
@@ -96,6 +100,8 @@ function MainApp() {
     );
   }
 
+  const activeEntry = homes.find((h) => h.id === activeHome);
+
   const switchHome = (id) => setActiveHome(id);
 
   const addHome = (name) => {
@@ -115,10 +121,40 @@ function MainApp() {
     if (activeHome === id) setActiveHome(next[0].id);
   };
 
+  // Link a home to the server: upload its current definition under a new
+  // code, then mark the registry entry so it syncs live. Returns the code.
+  const linkHome = async (id) => {
+    const code = newHouseCode();
+    await pushHouse(code, readHomeDef(id));
+    setHomes(homes.map((h) => (h.id === id ? { ...h, houseId: code } : h)));
+    return code;
+  };
+
+  // Join an existing house by code: pull its definition into a fresh local
+  // home (named locally), linked for live sync. Throws "notfound" etc.
+  const joinHome = async (code, name) => {
+    const clean = code.trim().toLowerCase();
+    const data = await fetchHouse(clean);
+    if (!data) {
+      const e = new Error("notfound");
+      e.code = "notfound";
+      throw e;
+    }
+    const id = newHomeId();
+    writeHomeDef(id, data);
+    setHomes([...homes, { id, name: name.trim() || t(lang, "newHome"), houseId: clean }]);
+    setActiveHome(id);
+  };
+
+  // Stop syncing (data stays local; the server copy is untouched).
+  const unlinkHome = (id) =>
+    setHomes(homes.map((h) => (h.id === id ? { id: h.id, name: h.name } : h)));
+
   return shell(
     <Household
       key={activeHome}
       homeId={activeHome}
+      houseId={activeEntry?.houseId || null}
       lang={lang}
       setLang={setLang}
       theme={theme}
@@ -131,6 +167,9 @@ function MainApp() {
       onAddHome={addHome}
       onRenameHome={renameHome}
       onDeleteHome={deleteHome}
+      onLinkHome={linkHome}
+      onJoinHome={joinHome}
+      onUnlinkHome={unlinkHome}
     />
   );
 }
@@ -139,6 +178,7 @@ function MainApp() {
 // remounting (via the key in MainApp) reloads a different home cleanly.
 function Household({
   homeId,
+  houseId,
   lang,
   setLang,
   theme,
@@ -151,6 +191,9 @@ function Household({
   onAddHome,
   onRenameHome,
   onDeleteHome,
+  onLinkHome,
+  onJoinHome,
+  onUnlinkHome,
 }) {
   const [rooms, setRooms] = useStoredState(homeKey(homeId, "rooms"), DEFAULT_ROOMS, migrateRooms);
   const [owner, setOwner] = useStoredState(homeKey(homeId, "owner"), "");
@@ -186,6 +229,21 @@ function Household({
 
   // Live sync: worker's checkmarks flow into today via the share doc.
   useShareSync(lastShare, setToday);
+
+  // Live sync: a linked home's definition mirrors across devices.
+  useHouseSync({
+    houseId,
+    rooms,
+    houseMap,
+    contract,
+    workerLang,
+    owner,
+    setRooms,
+    setHouseMap,
+    setContract,
+    setWorkerLang,
+    setOwner,
+  });
 
   const finishVisit = () => {
     if (!today) return;
@@ -245,6 +303,9 @@ function Household({
           onAddHome={onAddHome}
           onRenameHome={onRenameHome}
           onDeleteHome={onDeleteHome}
+          onLinkHome={onLinkHome}
+          onJoinHome={onJoinHome}
+          onUnlinkHome={onUnlinkHome}
         />
       )}
       {tab === "today" && (

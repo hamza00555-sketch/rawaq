@@ -4,7 +4,8 @@ import { press } from "../press.js";
 import BottomSheet from "./BottomSheet.jsx";
 import Icon from "./Icons.jsx";
 
-// Pick / add / rename / delete households. Opened from the Home appbar.
+// Pick / add / rename / delete households, and link them across devices
+// via a house code. Each device names its own copy; only the data syncs.
 export default function HomeSwitcher({
   open,
   onClose,
@@ -15,12 +16,21 @@ export default function HomeSwitcher({
   onAdd,
   onRename,
   onDelete,
+  onLink,
+  onJoin,
+  onUnlink,
 }) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [editId, setEditId] = useState(null);
   const [editName, setEditName] = useState("");
   const [confirmDel, setConfirmDel] = useState(null);
+  const [busy, setBusy] = useState(null); // home id currently linking
+  const [copied, setCopied] = useState(null);
+  const [joining, setJoining] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
+  const [joinName, setJoinName] = useState("");
+  const [joinErr, setJoinErr] = useState("");
 
   const submitAdd = () => {
     if (!newName.trim()) return;
@@ -33,6 +43,47 @@ export default function HomeSwitcher({
   const submitRename = () => {
     if (editId) onRename(editId, editName);
     setEditId(null);
+  };
+
+  const link = async (id) => {
+    setBusy(id);
+    try {
+      await onLink(id);
+    } catch {
+      // stays unlinked; user can retry
+    }
+    setBusy(null);
+  };
+
+  const copyCode = async (code) => {
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+    setCopied(code);
+    setTimeout(() => setCopied(null), 1800);
+  };
+
+  const submitJoin = async () => {
+    if (!joinCode.trim()) return;
+    setJoinErr("");
+    setBusy("join");
+    try {
+      await onJoin(joinCode, joinName);
+      setJoining(false);
+      setJoinCode("");
+      setJoinName("");
+      onClose();
+    } catch (e) {
+      setJoinErr(e?.code === "notfound" ? t(lang, "houseNotFound") : t(lang, "houseSyncError"));
+    }
+    setBusy(null);
   };
 
   return (
@@ -64,7 +115,7 @@ export default function HomeSwitcher({
                     onClose();
                   })}
                 >
-                  <Icon name={home.id === activeHome ? "check-circle" : "home"} size={20} />
+                  <Icon name={home.houseId ? "link" : home.id === activeHome ? "check-circle" : "home"} size={20} />
                   <span>{home.name}</span>
                 </button>
                 <button
@@ -91,6 +142,7 @@ export default function HomeSwitcher({
                 )}
               </>
             )}
+
             {confirmDel === home.id && (
               <button
                 type="button"
@@ -103,6 +155,37 @@ export default function HomeSwitcher({
               >
                 {t(lang, "deleteHomeConfirm")}
               </button>
+            )}
+
+            {/* Linking row: show + copy the code when linked, else offer to link */}
+            {editId !== home.id && (
+              <div className="home-link-row">
+                {home.houseId ? (
+                  <>
+                    <button type="button" className="house-code" onClick={() => copyCode(home.houseId)}>
+                      <Icon name="link" size={15} />
+                      <code>{home.houseId}</code>
+                      <span className="muted">{copied === home.houseId ? t(lang, "copied") : t(lang, "tapToCopy")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-text-danger"
+                      {...press(() => onUnlink(home.id))}
+                    >
+                      {t(lang, "unlinkHome")}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-text"
+                    disabled={busy === home.id}
+                    {...press(() => link(home.id))}
+                  >
+                    <Icon name="link" size={15} /> {busy === home.id ? t(lang, "linking") : t(lang, "linkHome")}
+                  </button>
+                )}
+              </div>
             )}
           </div>
         ))}
@@ -117,13 +200,7 @@ export default function HomeSwitcher({
               placeholder={t(lang, "homeNamePlaceholder")}
               autoFocus
             />
-            <button
-              type="button"
-              className="icon-btn"
-              aria-label={t(lang, "add")}
-              disabled={!newName.trim()}
-              {...press(submitAdd)}
-            >
+            <button type="button" className="icon-btn" aria-label={t(lang, "add")} disabled={!newName.trim()} {...press(submitAdd)}>
               <Icon name="check" size={20} strokeWidth={3} />
             </button>
           </div>
@@ -132,6 +209,43 @@ export default function HomeSwitcher({
             <Icon name="plus" size={20} /> {t(lang, "addHome")}
           </button>
         )}
+
+        {/* Join an existing house by code */}
+        {joining ? (
+          <div className="stack" style={{ gap: 8 }}>
+            <input
+              className="input"
+              dir="ltr"
+              value={joinCode}
+              onChange={(e) => { setJoinCode(e.target.value); setJoinErr(""); }}
+              placeholder={t(lang, "houseCodePlaceholder")}
+              autoFocus
+            />
+            <input
+              className="input"
+              dir="rtl"
+              value={joinName}
+              onChange={(e) => setJoinName(e.target.value)}
+              placeholder={t(lang, "homeNamePlaceholder")}
+            />
+            {joinErr && <p role="alert" style={{ color: "var(--danger)", fontSize: 13, fontWeight: 600 }}>{joinErr}</p>}
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              disabled={!joinCode.trim() || busy === "join"}
+              style={!joinCode.trim() || busy === "join" ? { opacity: 0.5 } : undefined}
+              {...press(submitJoin)}
+            >
+              {busy === "join" ? t(lang, "joining") : t(lang, "joinHouse")}
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="btn btn-block" {...press(() => setJoining(true))}>
+            <Icon name="link" size={18} /> {t(lang, "joinByCode")}
+          </button>
+        )}
+
+        <p className="muted" style={{ fontSize: 12 }}>{t(lang, "linkHint")}</p>
       </div>
     </BottomSheet>
   );
