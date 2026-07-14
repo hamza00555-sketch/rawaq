@@ -15,6 +15,8 @@ export const GRID_SIZES = [
   { cols: 12, rows: 16 },
   { cols: 15, rows: 20 },
   { cols: 18, rows: 24 },
+  { cols: 21, rows: 28 },
+  { cols: 24, rows: 32 },
 ];
 export const DEFAULT_COLS = 6;
 export const DEFAULT_ROWS = 8;

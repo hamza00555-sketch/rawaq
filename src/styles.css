@@ -978,6 +978,26 @@ select.input { appearance: auto; }
 
 .house-map.editing { touch-action: none; }
 
+/* Editing viewport: pans (JS-driven) when the grid is larger than the box.
+   Padding gives the selected block's overhanging handles room to show. */
+.map-viewport {
+  position: relative;
+  overflow: auto;
+  max-height: 64vh;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  touch-action: none;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+/* Zoomed-out grids keep a usable cell size and overflow to be panned,
+   instead of shrinking to fit the screen. Small grids still fit (100%). */
+.map-viewport .house-map.editing {
+  --edit-cell: 34px;
+  width: max(100%, calc(var(--cols, 6) * var(--edit-cell)));
+}
+
 .map-block {
   position: absolute;
   display: flex;

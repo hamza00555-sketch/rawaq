@@ -12,10 +12,56 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 // — no long-press needed. Geometry is committed on pointerup only; an
 // overlapping drop tints red and reverts. Selection is controlled by the
 // parent, which shows a size toolbar for the selected block.
+//
+// When zoomed out, the grid can be wider/taller than the screen: dragging
+// empty grid space pans the scroll viewport (JS-driven, so it feels the
+// same on touch and mouse), while a tap on empty space just deselects.
 export default function HouseMapEditor({ entries, blocks, cols, rows, onChange, selected, setSelected }) {
   const [draft, setDraft] = useState(null); // {id, rect, valid}
   const gesture = useRef(null);
   const gridRef = useRef(null);
+  const viewportRef = useRef(null);
+  const pan = useRef(null);
+
+  // Drag on empty grid → pan the viewport; a tap (no drag) → deselect.
+  // Blocks stopPropagation on pointerdown, so grabbing a block never pans.
+  const startPan = (e) => {
+    if (e.target !== e.currentTarget) return;
+    const vp = viewportRef.current;
+    try {
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    } catch {
+      // synthetic events (tests) have no active pointer
+    }
+    pan.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      left: vp?.scrollLeft || 0,
+      top: vp?.scrollTop || 0,
+      moved: false,
+    };
+  };
+
+  const movePan = (e) => {
+    const p = pan.current;
+    if (!p || e.pointerId !== p.pointerId) return;
+    const dx = e.clientX - p.startX;
+    const dy = e.clientY - p.startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) p.moved = true;
+    const vp = viewportRef.current;
+    if (vp) {
+      vp.scrollLeft = p.left - dx;
+      vp.scrollTop = p.top - dy;
+    }
+  };
+
+  const endPan = (e) => {
+    const p = pan.current;
+    if (!p || e.pointerId !== p.pointerId) return;
+    pan.current = null;
+    if (!p.moved) setSelected(null); // tap on empty space → deselect
+  };
 
   const startGesture = (mode, id) => (e) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -143,14 +189,16 @@ export default function HouseMapEditor({ entries, blocks, cols, rows, onChange, 
   };
 
   return (
+    <div className="map-viewport" dir="ltr" ref={viewportRef}>
     <div
       className={`house-map editing${cols >= 15 ? " dense-3" : cols >= 12 ? " dense-2" : cols >= 9 ? " dense-1" : ""}`}
       dir="ltr"
       ref={gridRef}
       style={{ "--cols": cols, "--rows": rows }}
-      onPointerDown={(e) => {
-        if (e.target === e.currentTarget) setSelected(null);
-      }}
+      onPointerDown={startPan}
+      onPointerMove={movePan}
+      onPointerUp={endPan}
+      onPointerCancel={endPan}
     >
       {entries.map((entry) => {
         const dragging = draft?.id === entry.id;
@@ -209,6 +257,7 @@ export default function HouseMapEditor({ entries, blocks, cols, rows, onChange, 
           </div>
         );
       })}
+    </div>
     </div>
   );
 }
