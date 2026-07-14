@@ -36,7 +36,7 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
 
   // Copy needs real transient activation (clipboard) — native onClick.
   const copyHomeData = async () => {
-    const code = exportHome();
+    const code = await exportHome();
     try {
       await navigator.clipboard.writeText(code);
     } catch {
@@ -51,10 +51,10 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
     setTimeout(() => setCopied(false), 1800);
   };
 
-  const restore = () => {
+  const restore = async () => {
     let keys;
     try {
-      keys = parseHome(importCode);
+      keys = await parseHome(importCode);
     } catch {
       setImportErr(true);
       setConfirmRestore(false);
