@@ -154,16 +154,37 @@ export function roomDone(tasks, roomId) {
   return mine.length > 0 && mine.every((t) => t.done);
 }
 
+// The facing boundary counts as "sealed" when either block marks that wall —
+// a door, exit, or opening — meaning mom put something between the two halls
+// on purpose, so they must stay separate rather than fuse.
+function sealedBetween(a, b, aSide, bSide) {
+  return (
+    (a.edges || []).some((e) => e.side === aSide) ||
+    (b.edges || []).some((e) => e.side === bSide)
+  );
+}
+
 // Two edge-touching rectangles that line up (same height on the same row, or
 // same width in the same column) fuse into their union rectangle. Returns the
 // merged rect (edges dropped — the shared wall is gone) or null when they
-// don't form a clean rectangle (an L-shape can't be a single block).
+// don't form a clean rectangle (an L-shape can't be a single block) OR when
+// the shared boundary carries a door/opening (kept separate on purpose).
 export function hallMergeRect(a, b) {
-  if (a.h === b.h && a.y === b.y && (a.x + a.w === b.x || b.x + b.w === a.x)) {
-    return { x: Math.min(a.x, b.x), y: a.y, w: a.w + b.w, h: a.h };
+  if (a.h === b.h && a.y === b.y) {
+    if (a.x + a.w === b.x && !sealedBetween(a, b, "e", "w")) {
+      return { x: a.x, y: a.y, w: a.w + b.w, h: a.h };
+    }
+    if (b.x + b.w === a.x && !sealedBetween(a, b, "w", "e")) {
+      return { x: b.x, y: a.y, w: a.w + b.w, h: a.h };
+    }
   }
-  if (a.w === b.w && a.x === b.x && (a.y + a.h === b.y || b.y + b.h === a.y)) {
-    return { x: a.x, y: Math.min(a.y, b.y), w: a.w, h: a.h + b.h };
+  if (a.w === b.w && a.x === b.x) {
+    if (a.y + a.h === b.y && !sealedBetween(a, b, "s", "n")) {
+      return { x: a.x, y: a.y, w: a.w, h: a.h + b.h };
+    }
+    if (b.y + b.h === a.y && !sealedBetween(a, b, "n", "s")) {
+      return { x: a.x, y: b.y, w: a.w, h: a.h + b.h };
+    }
   }
   return null;
 }
