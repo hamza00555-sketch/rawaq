@@ -1112,6 +1112,9 @@ select.input { appearance: auto; }
 .house-map.dense-2 .map-block .map-emoji { font-size: 14px; }
 .house-map.dense-2 .map-block .map-name { font-size: 9px; }
 .house-map.dense-2 .map-priority { min-width: 14px; height: 14px; font-size: 9.5px; top: 2px; right: 2px; }
+.house-map.dense-3 .map-block .map-emoji { font-size: 11px; }
+.house-map.dense-3 .map-block .map-name { font-size: 7.5px; }
+.house-map.dense-3 .map-priority { min-width: 12px; height: 12px; font-size: 8.5px; top: 1px; right: 1px; }
 
 .map-priority {
   position: absolute;

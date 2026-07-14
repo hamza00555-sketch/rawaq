@@ -144,7 +144,7 @@ export default function HouseMapEditor({ entries, blocks, cols, rows, onChange, 
 
   return (
     <div
-      className={`house-map editing${cols >= 12 ? " dense-2" : cols >= 9 ? " dense-1" : ""}`}
+      className={`house-map editing${cols >= 15 ? " dense-3" : cols >= 12 ? " dense-2" : cols >= 9 ? " dense-1" : ""}`}
       dir="ltr"
       ref={gridRef}
       style={{ "--cols": cols, "--rows": rows }}

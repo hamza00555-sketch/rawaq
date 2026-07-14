@@ -71,7 +71,7 @@ export default function HouseMap({ entries, cols = DEFAULT_COLS, rows = DEFAULT_
     style["--rows"] = vrows;
     style["--ar"] = vcols / vrows;
   }
-  const dense = vcols >= 12 ? " dense-2" : vcols >= 9 ? " dense-1" : "";
+  const dense = vcols >= 15 ? " dense-3" : vcols >= 12 ? " dense-2" : vcols >= 9 ? " dense-1" : "";
 
   return (
     <div
