@@ -45,7 +45,9 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
     // priority rooms win).
     let photoBudget = 720_000;
     const placed = rooms.filter((r) => r.photo && blocks[r.id]);
-    const thumbs = await Promise.all(placed.map((r) => compressImage(r.photo, 560, 0.6).catch(() => null)));
+    const thumbs = await Promise.all(
+      placed.map((r) => compressImage(r.photo, { maxDim: 640, targetBytes: 60_000 }).catch(() => null))
+    );
     const photoById = {};
     placed.forEach((r, i) => {
       const thumb = thumbs[i];
