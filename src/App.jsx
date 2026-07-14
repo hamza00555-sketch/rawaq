@@ -11,7 +11,7 @@ import {
   taskFingerprint,
   todayStr,
 } from "./data.js";
-import { isHall } from "./houseMap.js";
+import { isHall, mergeConnectedHalls } from "./houseMap.js";
 import { load, useStoredState } from "./storage.js";
 import {
   ACTIVE_KEY,
@@ -210,16 +210,20 @@ function Household({
   const [tab, setTab] = useState("home");
   const [shareOpen, setShareOpen] = useState(false);
 
-  // Halls used to live only as map blocks; now they're first-class rooms
-  // (own tasks + section). Promote any legacy orphan hall block — one that
-  // has no matching room — into a hall room so it keeps its place on the
-  // map and gains a task list. Runs once per mount (per home).
+  // One-time reconcile per mount (per home) for maps drawn before these
+  // features existed:
+  //  1. Halls used to be map-only blocks; promote any orphan hall block into
+  //     a first-class hall room so it keeps its place and gains a task list.
+  //  2. Auto-merge hallways that are already adjacent — so the merge also
+  //     applies to ready-made maps, not just newly dragged ones.
   useEffect(() => {
+    const blocks = houseMap?.blocks || {};
     const known = new Set(rooms.map((r) => r.id));
-    const orphans = Object.keys(houseMap?.blocks || {}).filter(
-      (id) => isHall(id) && !known.has(id)
-    );
-    if (orphans.length) setRooms([...rooms, ...orphans.map(makeHall)]);
+    const orphans = Object.keys(blocks).filter((id) => isHall(id) && !known.has(id));
+    const promoted = orphans.length ? [...rooms, ...orphans.map(makeHall)] : rooms;
+    const merged = mergeConnectedHalls(promoted, blocks);
+    if (merged.blocks !== blocks) setHouseMap({ ...houseMap, blocks: merged.blocks });
+    if (merged.rooms !== rooms) setRooms(merged.rooms);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
