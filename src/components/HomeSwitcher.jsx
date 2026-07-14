@@ -16,16 +16,14 @@ export default function HomeSwitcher({
   onAdd,
   onRename,
   onDelete,
-  onLink,
   onJoin,
-  onUnlink,
 }) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [editId, setEditId] = useState(null);
   const [editName, setEditName] = useState("");
   const [confirmDel, setConfirmDel] = useState(null);
-  const [busy, setBusy] = useState(null); // home id currently linking
+  const [busy, setBusy] = useState(null); // "join" while joining
   const [copied, setCopied] = useState(null);
   const [joining, setJoining] = useState(false);
   const [joinCode, setJoinCode] = useState("");
@@ -43,16 +41,6 @@ export default function HomeSwitcher({
   const submitRename = () => {
     if (editId) onRename(editId, editName);
     setEditId(null);
-  };
-
-  const link = async (id) => {
-    setBusy(id);
-    try {
-      await onLink(id);
-    } catch {
-      // stays unlinked; user can retry
-    }
-    setBusy(null);
   };
 
   const copyCode = async (code) => {
@@ -115,7 +103,7 @@ export default function HomeSwitcher({
                     onClose();
                   })}
                 >
-                  <Icon name={home.houseId ? "link" : home.id === activeHome ? "check-circle" : "home"} size={20} />
+                  <Icon name={home.id === activeHome ? "check-circle" : "home"} size={20} />
                   <span>{home.name}</span>
                 </button>
                 <button
@@ -157,34 +145,20 @@ export default function HomeSwitcher({
               </button>
             )}
 
-            {/* Linking row: show + copy the code when linked, else offer to link */}
+            {/* The house code sits next to the name, ready to copy & share */}
             {editId !== home.id && (
               <div className="home-link-row">
-                {home.houseId ? (
-                  <>
-                    <button type="button" className="house-code" onClick={() => copyCode(home.houseId)}>
-                      <Icon name="link" size={15} />
-                      <code>{home.houseId}</code>
-                      <span className="muted">{copied === home.houseId ? t(lang, "copied") : t(lang, "tapToCopy")}</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-text-danger"
-                      {...press(() => onUnlink(home.id))}
-                    >
-                      {t(lang, "unlinkHome")}
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    className="btn-text"
-                    disabled={busy === home.id}
-                    {...press(() => link(home.id))}
-                  >
-                    <Icon name="link" size={15} /> {busy === home.id ? t(lang, "linking") : t(lang, "linkHome")}
-                  </button>
-                )}
+                <span className="muted" style={{ fontSize: 12 }}>{t(lang, "houseCodeLabel")}</span>
+                <button
+                  type="button"
+                  className="house-code"
+                  aria-label={t(lang, "copyCode")}
+                  onClick={() => home.houseId && copyCode(home.houseId)}
+                >
+                  <code>{home.houseId || "…"}</code>
+                  <Icon name={copied === home.houseId ? "check" : "link"} size={15} />
+                  <span className="muted">{copied === home.houseId ? t(lang, "copied") : t(lang, "copyCode")}</span>
+                </button>
               </div>
             )}
           </div>

@@ -29,9 +29,7 @@ export default function HomeScreen({
   onAddHome,
   onRenameHome,
   onDeleteHome,
-  onLinkHome,
   onJoinHome,
-  onUnlinkHome,
 }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [homesOpen, setHomesOpen] = useState(false);
@@ -179,9 +177,7 @@ export default function HomeScreen({
           onAdd={onAddHome}
           onRename={onRenameHome}
           onDelete={onDeleteHome}
-          onLink={onLinkHome}
           onJoin={onJoinHome}
-          onUnlink={onUnlinkHome}
         />
       )}
 

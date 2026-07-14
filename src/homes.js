@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from "./data.js";
+import { newHouseCode } from "./house.js";
 
 // Multiple households on one device. Each home's data lives under its own
 // namespaced keys (rawaq_h_<id>_<field>); a small global registry tracks
@@ -50,7 +51,9 @@ export function ensureHomes() {
       localStorage.removeItem(flat);
     }
   }
-  localStorage.setItem(HOMES_KEY, JSON.stringify([{ id, name: "بيتي" }]));
+  // Every home is linked from the start: it gets a house code and uploads
+  // itself (via useHouseSync) so the code is always ready to share.
+  localStorage.setItem(HOMES_KEY, JSON.stringify([{ id, name: "بيتي", houseId: newHouseCode() }]));
   localStorage.setItem(ACTIVE_KEY, JSON.stringify(id));
   if (hadData) localStorage.setItem(ONBOARDED_KEY, "1");
 }

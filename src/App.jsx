@@ -19,11 +19,10 @@ import {
   ONBOARDED_KEY,
   homeKey,
   newHomeId,
-  readHomeDef,
   removeHomeData,
   writeHomeDef,
 } from "./homes.js";
-import { fetchHouse, newHouseCode, pushHouse } from "./house.js";
+import { fetchHouse, newHouseCode } from "./house.js";
 import { decodeWorkerHash } from "./share.js";
 import { parseShortHash } from "./shares.js";
 import { useShareSync } from "./useShareSync.js";
@@ -58,8 +57,19 @@ function MainApp() {
   const [lang, setLang] = useStoredState(STORAGE_KEYS.lang, "ar");
   const [theme, setTheme] = useStoredState(STORAGE_KEYS.theme, "light");
   const [uiSize, setUiSize] = useStoredState(STORAGE_KEYS.uiSize, "normal");
-  const [homes, setHomes] = useStoredState(HOMES_KEY, [{ id: "default", name: "بيتي" }]);
+  const [homes, setHomes] = useStoredState(HOMES_KEY, [
+    { id: "default", name: "بيتي", houseId: newHouseCode() },
+  ]);
   const [activeHome, setActiveHome] = useStoredState(ACTIVE_KEY, "default");
+
+  // Every home carries a shareable house code and syncs to the server. Older
+  // homes saved before this may lack one — backfill it here; useHouseSync then
+  // uploads the home under that code (nothing else to do).
+  useEffect(() => {
+    if (homes.some((h) => !h.houseId)) {
+      setHomes(homes.map((h) => (h.houseId ? h : { ...h, houseId: newHouseCode() })));
+    }
+  }, [homes, setHomes]);
 
   const [splash, setSplash] = useState(true);
   const [splashLeaving, setSplashLeaving] = useState(false);
@@ -108,7 +118,8 @@ function MainApp() {
 
   const addHome = (name) => {
     const id = newHomeId();
-    setHomes([...homes, { id, name: name.trim() || t(lang, "newHome") }]);
+    // linked from creation: it gets a code now and uploads once it mounts
+    setHomes([...homes, { id, name: name.trim() || t(lang, "newHome"), houseId: newHouseCode() }]);
     setActiveHome(id);
   };
 
@@ -121,15 +132,6 @@ function MainApp() {
     removeHomeData(id);
     setHomes(next);
     if (activeHome === id) setActiveHome(next[0].id);
-  };
-
-  // Link a home to the server: upload its current definition under a new
-  // code, then mark the registry entry so it syncs live. Returns the code.
-  const linkHome = async (id) => {
-    const code = newHouseCode();
-    await pushHouse(code, readHomeDef(id));
-    setHomes(homes.map((h) => (h.id === id ? { ...h, houseId: code } : h)));
-    return code;
   };
 
   // Join an existing house by code: pull its definition into a fresh local
@@ -148,10 +150,6 @@ function MainApp() {
     setActiveHome(id);
   };
 
-  // Stop syncing (data stays local; the server copy is untouched).
-  const unlinkHome = (id) =>
-    setHomes(homes.map((h) => (h.id === id ? { id: h.id, name: h.name } : h)));
-
   return shell(
     <Household
       key={activeHome}
@@ -169,9 +167,7 @@ function MainApp() {
       onAddHome={addHome}
       onRenameHome={renameHome}
       onDeleteHome={deleteHome}
-      onLinkHome={linkHome}
       onJoinHome={joinHome}
-      onUnlinkHome={unlinkHome}
     />
   );
 }
@@ -193,9 +189,7 @@ function Household({
   onAddHome,
   onRenameHome,
   onDeleteHome,
-  onLinkHome,
   onJoinHome,
-  onUnlinkHome,
 }) {
   const [rooms, setRooms] = useStoredState(homeKey(homeId, "rooms"), DEFAULT_ROOMS, migrateRooms);
   const [owner, setOwner] = useStoredState(homeKey(homeId, "owner"), "");
@@ -325,9 +319,7 @@ function Household({
           onAddHome={onAddHome}
           onRenameHome={onRenameHome}
           onDeleteHome={onDeleteHome}
-          onLinkHome={onLinkHome}
           onJoinHome={onJoinHome}
-          onUnlinkHome={onUnlinkHome}
         />
       )}
       {tab === "today" && (
