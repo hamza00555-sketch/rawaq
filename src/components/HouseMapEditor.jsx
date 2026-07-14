@@ -1,8 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { collides, cycleEdge, edgeKind, sideLen } from "../houseMap.js";
 import { rectStyle, BlockContent, EdgeMarks } from "./HouseMap.jsx";
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+const MIN_CELL = 14;
+const MAX_CELL = 84;
 
 // Grid editor: drag a block to move it, drag the selected block's corner
 // handle to resize, tap the ✕ chip to unplace. Selecting a block also
@@ -13,20 +16,103 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 // overlapping drop tints red and reverts. Selection is controlled by the
 // parent, which shows a size toolbar for the selected block.
 //
-// When zoomed out, the grid can be wider/taller than the screen: dragging
-// empty grid space pans the scroll viewport (JS-driven, so it feels the
-// same on touch and mouse), while a tap on empty space just deselects.
+// The canvas is one big open grid. Navigate it freely: drag empty space to
+// pan (JS-driven, same on touch and mouse) and pinch with two fingers to
+// zoom — the cell size grows/shrinks, so the drawing stays crisp at any
+// scale. A tap on empty space just deselects.
 export default function HouseMapEditor({ entries, blocks, cols, rows, onChange, selected, setSelected }) {
   const [draft, setDraft] = useState(null); // {id, rect, valid}
+  const [cell, setCell] = useState(34); // px per grid cell (pinch-zoom)
   const gesture = useRef(null);
   const gridRef = useRef(null);
   const viewportRef = useRef(null);
   const pan = useRef(null);
+  const cellRef = useRef(cell);
+  cellRef.current = cell;
+  const pointers = useRef(new Map());
+  const pinch = useRef(null);
+
+  // On open, pick a comfortable zoom for this screen and scroll to wherever
+  // the rooms already are (or the top-left for an empty canvas).
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp) return;
+    const w = vp.clientWidth || 320;
+    const initial = clamp(Math.round(w / 11), 24, 46);
+    setCell(initial);
+    requestAnimationFrame(() => {
+      const rects = Object.values(blocks);
+      if (!rects.length || !viewportRef.current) return;
+      const minX = Math.min(...rects.map((b) => b.x));
+      const minY = Math.min(...rects.map((b) => b.y));
+      viewportRef.current.scrollLeft = Math.max(0, minX * initial - 20);
+      viewportRef.current.scrollTop = Math.max(0, minY * initial - 20);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Two-finger pinch → zoom. Pointer tracking runs in the capture phase so
+  // it sees every finger even when the first landed on a block (which stops
+  // propagation). When a second finger arrives, any one-finger drag is
+  // cancelled and we scale the cell size, anchoring on the pinch midpoint.
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp) return;
+    const pts = pointers.current;
+    const spread = () => {
+      const [a, b] = [...pts.values()];
+      return { d: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+    };
+    const down = (e) => {
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 2) {
+        gesture.current = null; // abort a block move/resize in progress
+        pan.current = null;
+        setDraft(null);
+        const s = spread();
+        pinch.current = { d0: s.d || 1, cell0: cellRef.current };
+      }
+    };
+    const move = (e) => {
+      if (!pts.has(e.pointerId)) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (!pinch.current || pts.size < 2) return;
+      const s = spread();
+      const next = clamp(Math.round(pinch.current.cell0 * (s.d / pinch.current.d0)), MIN_CELL, MAX_CELL);
+      const prev = cellRef.current;
+      if (next === prev) return;
+      const rect = vp.getBoundingClientRect();
+      // content coord (at current scale) under the pinch midpoint
+      const cx = s.mx - rect.left + vp.scrollLeft;
+      const cy = s.my - rect.top + vp.scrollTop;
+      const ratio = next / prev;
+      setCell(next);
+      requestAnimationFrame(() => {
+        vp.scrollLeft = cx * ratio - (s.mx - rect.left);
+        vp.scrollTop = cy * ratio - (s.my - rect.top);
+      });
+    };
+    const up = (e) => {
+      pts.delete(e.pointerId);
+      if (pts.size < 2) pinch.current = null;
+    };
+    vp.addEventListener("pointerdown", down, { capture: true });
+    vp.addEventListener("pointermove", move, { capture: true });
+    vp.addEventListener("pointerup", up, { capture: true });
+    vp.addEventListener("pointercancel", up, { capture: true });
+    return () => {
+      vp.removeEventListener("pointerdown", down, { capture: true });
+      vp.removeEventListener("pointermove", move, { capture: true });
+      vp.removeEventListener("pointerup", up, { capture: true });
+      vp.removeEventListener("pointercancel", up, { capture: true });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Drag on empty grid → pan the viewport; a tap (no drag) → deselect.
   // Blocks stopPropagation on pointerdown, so grabbing a block never pans.
   const startPan = (e) => {
-    if (e.target !== e.currentTarget) return;
+    if (e.target !== e.currentTarget || pinch.current || pointers.current.size >= 2) return;
     const vp = viewportRef.current;
     try {
       e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -45,7 +131,7 @@ export default function HouseMapEditor({ entries, blocks, cols, rows, onChange, 
 
   const movePan = (e) => {
     const p = pan.current;
-    if (!p || e.pointerId !== p.pointerId) return;
+    if (!p || e.pointerId !== p.pointerId || pinch.current) return;
     const dx = e.clientX - p.startX;
     const dy = e.clientY - p.startY;
     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) p.moved = true;
@@ -65,6 +151,7 @@ export default function HouseMapEditor({ entries, blocks, cols, rows, onChange, 
 
   const startGesture = (mode, id) => (e) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (pinch.current || pointers.current.size >= 2) return;
     e.stopPropagation();
     try {
       e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -86,7 +173,7 @@ export default function HouseMapEditor({ entries, blocks, cols, rows, onChange, 
 
   const handleMove = (e) => {
     const g = gesture.current;
-    if (!g || e.pointerId !== g.pointerId) return;
+    if (!g || e.pointerId !== g.pointerId || pinch.current) return;
     const grid = gridRef.current?.getBoundingClientRect();
     if (!grid || !grid.width) return;
     // Rect-relative cell math — safe under the large-UI zoom.
@@ -194,7 +281,7 @@ export default function HouseMapEditor({ entries, blocks, cols, rows, onChange, 
       className={`house-map editing${cols >= 15 ? " dense-3" : cols >= 12 ? " dense-2" : cols >= 9 ? " dense-1" : ""}`}
       dir="ltr"
       ref={gridRef}
-      style={{ "--cols": cols, "--rows": rows }}
+      style={{ "--cols": cols, "--rows": rows, "--edit-cell": `${cell}px` }}
       onPointerDown={startPan}
       onPointerMove={movePan}
       onPointerUp={endPan}

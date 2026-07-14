@@ -21,6 +21,13 @@ export const GRID_SIZES = [
 export const DEFAULT_COLS = 6;
 export const DEFAULT_ROWS = 8;
 
+// The editor works on one big open canvas — mom pans and pinch-zooms freely
+// instead of stepping through fixed zoom levels. Rooms still snap to this
+// integer grid; read-only views crop to the used area so the empty space
+// around the drawing never shows.
+export const OPEN_COLS = 24;
+export const OPEN_ROWS = 32;
+
 export const EMPTY_MAP = { cols: DEFAULT_COLS, rows: DEFAULT_ROWS, blocks: {} };
 
 // Hallways are map-only blocks (no tasks, no priority). They live in the

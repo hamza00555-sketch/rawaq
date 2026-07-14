@@ -181,6 +181,7 @@ export default function WorkerView({ payload, shortId }) {
               entries={mapEntries}
               cols={gridCols}
               rows={gridRows}
+              fit
               selectedId={selectedRoomId}
               onTapRoom={(id) => setSelectedRoomId(id === selectedRoomId ? null : id)}
             />

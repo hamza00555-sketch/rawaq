@@ -3,8 +3,8 @@ import { t } from "../i18n.js";
 import { press } from "../press.js";
 import { makeHall } from "../data.js";
 import {
-  GRID_SIZES,
-  blocksFit,
+  OPEN_COLS,
+  OPEN_ROWS,
   collides,
   findFreeSpot,
   newHallId,
@@ -78,9 +78,13 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
   const [snack, setSnack] = useState(null);
   const [selected, setSelected] = useState(null);
 
-  const map = useMemo(() => sanitizeMap(houseMap, rooms), [houseMap, rooms]);
+  // The editor always works on the big open canvas: normalize whatever was
+  // stored (older, smaller grids included) onto it, keeping every block.
+  const map = useMemo(
+    () => sanitizeMap({ cols: OPEN_COLS, rows: OPEN_ROWS, blocks: houseMap?.blocks || {} }, rooms),
+    [houseMap, rooms]
+  );
   const { cols, rows, blocks } = map;
-  const sizeIdx = GRID_SIZES.findIndex((s) => s.cols === cols);
 
   const roomName = (room) => room.name[lang] || room.name.ar;
 
@@ -98,16 +102,6 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
   const unplaced = rooms.filter((room) => !blocks[room.id]);
 
   const commit = (nextBlocks) => setHouseMap({ cols, rows, blocks: nextBlocks });
-
-  const setSize = (idx) => {
-    const size = GRID_SIZES[idx];
-    if (!size) return;
-    if (!blocksFit(blocks, size.cols, size.rows)) {
-      setSnack({ message: t(lang, "zoomBlocked") });
-      return;
-    }
-    setHouseMap({ cols: size.cols, rows: size.rows, blocks });
-  };
 
   const placeRoom = (room) => {
     const spot = findFreeSpot(blocks, 2, 2, cols, rows) || findFreeSpot(blocks, 1, 1, cols, rows);
@@ -148,27 +142,6 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
             <Icon name={lang === "ar" ? "chevron-right" : "chevron-left"} size={22} />
           </button>
           <h1>{t(lang, "houseMap")}</h1>
-        </div>
-        <div className="stepper" dir="ltr" aria-label={t(lang, "mapZoom")}>
-          <button
-            type="button"
-            className="stepper-btn"
-            aria-label={t(lang, "zoomIn")}
-            disabled={sizeIdx <= 0}
-            {...press(() => setSize(sizeIdx - 1))}
-          >
-            +
-          </button>
-          <span className="stepper-value" style={{ fontSize: 13 }}>{cols}×{rows}</span>
-          <button
-            type="button"
-            className="stepper-btn"
-            aria-label={t(lang, "zoomOut")}
-            disabled={sizeIdx >= GRID_SIZES.length - 1}
-            {...press(() => setSize(sizeIdx + 1))}
-          >
-            −
-          </button>
         </div>
       </header>
 

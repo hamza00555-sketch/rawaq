@@ -991,11 +991,10 @@ select.input { appearance: auto; }
   overscroll-behavior: contain;
   scrollbar-width: thin;
 }
-/* Zoomed-out grids keep a usable cell size and overflow to be panned,
-   instead of shrinking to fit the screen. Small grids still fit (100%). */
+/* The grid renders at the pinch-zoom cell size and overflows to be panned,
+   instead of shrinking to fit the screen. Cell size is set inline (px). */
 .map-viewport .house-map.editing {
-  --edit-cell: 34px;
-  width: max(100%, calc(var(--cols, 6) * var(--edit-cell)));
+  width: max(100%, calc(var(--cols, 6) * var(--edit-cell, 34px)));
 }
 
 .map-block {
