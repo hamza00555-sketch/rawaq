@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { t } from "../i18n.js";
 import { taskFingerprint, todayStr } from "../data.js";
-import { isHall, sanitizeMap } from "../houseMap.js";
+import { sanitizeMap } from "../houseMap.js";
 import { compressImage } from "../image.js";
 import { createShare, shareIdFromLink } from "../shares.js";
 import BottomSheet from "./BottomSheet.jsx";
@@ -63,23 +63,12 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
       ["__grid", { cols, rows }],
       // worker preferences (chosen display language) — also layout-less
       ["__prefs", { lang: workerLang || "fil" }],
+      // Rooms and hallways alike (halls are rooms with type "hall"): each
+      // carries its layout, priority, photo and its tasks flow via today.tasks.
       ...rooms.map((r, i) => [
         r.id,
         { name: r.name, emoji: r.emoji, type: r.type || "general", layout: blocks[r.id] || null, priority: i + 1, photo: photoById[r.id] || null },
       ]),
-      // Hallways: map-only pseudo-rooms — no tasks ever reference these ids
-      ...Object.keys(blocks)
-        .filter(isHall)
-        .map((id) => [
-          id,
-          {
-            name: { ar: "ممر", en: "Hallway", fil: "Pasilyo", id: "Lorong" },
-            emoji: "",
-            type: "hall",
-            layout: blocks[id],
-            priority: null,
-          },
-        ]),
     ]);
     createShare({ date: today.date, owner, tasks: today.tasks, rooms: roomsMeta })
       .then((link) => {

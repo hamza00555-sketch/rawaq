@@ -49,7 +49,7 @@ export function EdgeMarks({ rect }) {
 // The canvas is always LTR: a floor plan is spatial, not text — it must
 // not mirror when the UI language flips between Arabic and English.
 // entries: [{id, rect, emoji, name, type, priority, done, dimmed}]
-// (rect may carry edges/legacy door; type "hall" blocks are never tappable)
+// (rect may carry edges/legacy door; blocks are tappable unless dimmed)
 export default function HouseMap({ entries, cols = DEFAULT_COLS, rows = DEFAULT_ROWS, selectedId, onTapRoom, fit = false }) {
   // Fit mode (Home preview): crop to the placed rooms' bounding box and
   // let the container's aspect-ratio follow the real house shape, so a
@@ -81,7 +81,7 @@ export default function HouseMap({ entries, cols = DEFAULT_COLS, rows = DEFAULT_
     >
       {items.map((entry) => {
         const small = entry.rect.w === 1 || entry.rect.h === 1;
-        const tappable = !!onTapRoom && !entry.dimmed && entry.type !== "hall";
+        const tappable = !!onTapRoom && !entry.dimmed;
         const cls = [
           "map-block",
           `type-${entry.type || "general"}`,

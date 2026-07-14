@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { t } from "../i18n.js";
-import { EMOJI_PRESETS, ROOM_TYPES } from "../data.js";
+import { EMOJI_PRESETS, HALL_EMOJI, ROOM_TYPES } from "../data.js";
 import { press } from "../press.js";
 import BottomSheet from "./BottomSheet.jsx";
 import Icon from "./Icons.jsx";
@@ -17,7 +17,7 @@ const TYPE_KEY = {
 
 // Add or edit a room: Arabic name required, emoji + type pickers,
 // delete (edit mode) with an in-sheet confirm step.
-export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onDelete }) {
+export default function RoomEditorSheet({ open, onClose, lang, room, isHall = false, onSave, onDelete }) {
   const [nameAr, setNameAr] = useState("");
   const [nameEn, setNameEn] = useState("");
   const [nameFil, setNameFil] = useState("");
@@ -32,10 +32,10 @@ export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onD
     setNameEn(room?.name.en || "");
     setNameFil(room?.name.fil || "");
     setNameId(room?.name.id || "");
-    setEmoji(room?.emoji || EMOJI_PRESETS[0]);
-    setType(room?.type || "general");
+    setEmoji(room?.emoji || (isHall ? HALL_EMOJI : EMOJI_PRESETS[0]));
+    setType(room?.type || (isHall ? "hall" : "general"));
     setConfirmDelete(false);
-  }, [open, room]);
+  }, [open, room, isHall]);
 
   const [saving, setSaving] = useState(false);
   const canSave = nameAr.trim();
@@ -45,12 +45,15 @@ export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onD
     setSaving(true);
     const name = await finalizeName(nameAr, nameEn, nameFil, nameId);
     setSaving(false);
-    onSave({ name, emoji, type });
+    onSave({ name, emoji, type: isHall ? "hall" : type });
     onClose();
   };
 
+  const editTitle = isHall ? "editHall" : "editRoom";
+  const addTitle = isHall ? "addHall" : "addRoom";
+
   return (
-    <BottomSheet open={open} onClose={onClose} title={room ? t(lang, "editRoom") : t(lang, "addRoom")}>
+    <BottomSheet open={open} onClose={onClose} title={room ? t(lang, editTitle) : t(lang, addTitle)}>
       <div className="stack">
         <TrilingualNameFields
           key={`${open}-${room?.id || "new"}`}
@@ -67,20 +70,24 @@ export default function RoomEditorSheet({ open, onClose, lang, room, onSave, onD
           initialAr={room?.name.ar || ""}
         />
 
-        <span className="muted">{t(lang, "roomType")}</span>
-        <div className="chip-wrap">
-          {ROOM_TYPES.map((rt) => (
-            <button
-              key={rt}
-              type="button"
-              className={`task-chip ${type === rt ? "selected" : ""}`}
-              aria-pressed={type === rt}
-              {...press(() => setType(rt))}
-            >
-              {t(lang, TYPE_KEY[rt])}
-            </button>
-          ))}
-        </div>
+        {!isHall && (
+          <>
+            <span className="muted">{t(lang, "roomType")}</span>
+            <div className="chip-wrap">
+              {ROOM_TYPES.map((rt) => (
+                <button
+                  key={rt}
+                  type="button"
+                  className={`task-chip ${type === rt ? "selected" : ""}`}
+                  aria-pressed={type === rt}
+                  {...press(() => setType(rt))}
+                >
+                  {t(lang, TYPE_KEY[rt])}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         <span className="muted">{t(lang, "chooseEmoji")}</span>
         <div className="emoji-grid">

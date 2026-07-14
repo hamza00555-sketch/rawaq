@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { t } from "../i18n.js";
+import { makeHall } from "../data.js";
+import { newHallId } from "../houseMap.js";
 import { press } from "../press.js";
 import PhotoUploader from "../components/PhotoUploader.jsx";
 import BottomSheet from "../components/BottomSheet.jsx";
@@ -140,21 +142,34 @@ export default function RoomsScreen({ lang, rooms, setRooms, houseMap, setHouseM
   const [openRoomId, setOpenRoomId] = useState(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorRoomId, setEditorRoomId] = useState(null); // null = add mode
+  const [addingHall, setAddingHall] = useState(false); // add-mode: hall vs room
   const [mapOpen, setMapOpen] = useState(false);
   const [snack, setSnack] = useState(null);
 
   const openRoom = rooms.find((x) => x.id === openRoomId);
   const editorRoom = rooms.find((x) => x.id === editorRoomId);
+  const editorIsHall = addingHall || editorRoom?.type === "hall";
+
+  const realRooms = rooms.filter((r) => r.type !== "hall");
+  const halls = rooms.filter((r) => r.type === "hall");
 
   const saveRoom = (patch) => {
     if (editorRoom) {
       setRooms(rooms.map((r) => (r.id === editorRoom.id ? { ...r, ...patch } : r)));
+    } else if (addingHall) {
+      setRooms([...rooms, { ...makeHall(newHallId()), ...patch, type: "hall" }]);
     } else {
       setRooms([
         ...rooms,
         { id: `room-${Date.now().toString(36)}`, ...patch, photo: null, tasks: [] },
       ]);
     }
+  };
+
+  const openAdd = (hall) => {
+    setAddingHall(hall);
+    setEditorRoomId(null);
+    setEditorOpen(true);
   };
 
   const deleteRoom = () => {
@@ -205,6 +220,7 @@ export default function RoomsScreen({ lang, rooms, setRooms, houseMap, setHouseM
           onClose={() => setEditorOpen(false)}
           lang={lang}
           room={editorRoom}
+          isHall={editorIsHall}
           onSave={saveRoom}
           onDelete={deleteRoom}
         />
@@ -212,6 +228,24 @@ export default function RoomsScreen({ lang, rooms, setRooms, houseMap, setHouseM
       </>
     );
   }
+
+  const roomCard = (room) => (
+    <button key={room.id} type="button" className="room-card" {...press(() => setOpenRoomId(room.id))}>
+      {room.photo ? (
+        <img src={room.photo} alt="" className="room-photo" />
+      ) : (
+        <div className="room-photo-placeholder" aria-hidden="true">
+          {room.emoji}
+        </div>
+      )}
+      <div className="room-card-body">
+        <h3>{room.name[lang] || room.name.ar}</h3>
+        <p className="muted" style={{ fontSize: 14 }}>
+          {room.tasks.length} {t(lang, "tasks")}
+        </p>
+      </div>
+    </button>
+  );
 
   return (
     <div className="screen">
@@ -222,33 +256,27 @@ export default function RoomsScreen({ lang, rooms, setRooms, houseMap, setHouseM
         </button>
       </header>
       <div className="rooms-grid">
-        {rooms.map((room) => (
-          <button key={room.id} type="button" className="room-card" {...press(() => setOpenRoomId(room.id))}>
-            {room.photo ? (
-              <img src={room.photo} alt="" className="room-photo" />
-            ) : (
-              <div className="room-photo-placeholder" aria-hidden="true">
-                {room.emoji}
-              </div>
-            )}
-            <div className="room-card-body">
-              <h3>{room.name[lang] || room.name.ar}</h3>
-              <p className="muted" style={{ fontSize: 14 }}>
-                {room.tasks.length} {t(lang, "tasks")}
-              </p>
-            </div>
-          </button>
-        ))}
+        {realRooms.map(roomCard)}
         <button
           type="button"
           className="room-card add-room-card"
-          {...press(() => {
-            setEditorRoomId(null);
-            setEditorOpen(true);
-          })}
+          {...press(() => openAdd(false))}
         >
           <Icon name="plus" size={32} />
           <span style={{ fontWeight: 600 }}>{t(lang, "addRoom")}</span>
+        </button>
+      </div>
+
+      <h2 className="section-title" style={{ marginTop: 24 }}>{t(lang, "hallways")}</h2>
+      <div className="rooms-grid">
+        {halls.map(roomCard)}
+        <button
+          type="button"
+          className="room-card add-room-card"
+          {...press(() => openAdd(true))}
+        >
+          <Icon name="plus" size={32} />
+          <span style={{ fontWeight: 600 }}>{t(lang, "addHall")}</span>
         </button>
       </div>
 
@@ -257,6 +285,7 @@ export default function RoomsScreen({ lang, rooms, setRooms, houseMap, setHouseM
         onClose={() => setEditorOpen(false)}
         lang={lang}
         room={editorRoom}
+        isHall={editorIsHall}
         onSave={saveRoom}
         onDelete={editorRoom ? deleteRoom : undefined}
       />

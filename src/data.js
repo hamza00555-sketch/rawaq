@@ -112,7 +112,36 @@ export const TASK_LIBRARY = {
     lib("ترتيب الأدراج", "Organize drawers", "Ayusin ang mga drawer", "Rapikan laci"),
     lib("تنظيف الإضاءة", "Clean the lights", "Linisin ang mga ilaw", "Bersihkan lampu"),
   ],
+  hall: [
+    lib("كنس ومسح الأرضية", "Sweep & mop floor", "Walisin at lampasuhin ang sahig", "Sapu dan pel lantai"),
+    lib("تنفيض الغبار", "Dust surfaces", "Alisin ang alikabok", "Bersihkan debu"),
+    lib("تنظيف الأبواب والمقابض", "Clean doors & handles", "Linisin ang pinto at hawakan", "Bersihkan pintu dan gagang"),
+    lib("تلميع المرايا", "Polish mirrors", "Pakintabin ang salamin", "Kilapkan cermin"),
+    lib("ترتيب خزانة الأحذية", "Tidy the shoe rack", "Ayusin ang lalagyan ng sapatos", "Rapikan rak sepatu"),
+    lib("كنس السجاد الممتد", "Vacuum the runner rug", "I-vacuum ang mahabang karpet", "Vakum karpet lorong"),
+    lib("مسح الجدران", "Wipe the walls", "Punasan ang dingding", "Lap dinding"),
+    lib("تنظيف الإضاءة", "Clean the lights", "Linisin ang mga ilaw", "Bersihkan lampu"),
+    lib("إزالة خيوط العنكبوت", "Remove cobwebs", "Alisin ang mga sapot", "Hilangkan sarang laba-laba"),
+    lib("تنظيف الدرج", "Clean the stairs", "Linisin ang hagdan", "Bersihkan tangga"),
+    lib("ترتيب طاولة المدخل", "Tidy the console table", "Ayusin ang console table", "Rapikan meja lorong"),
+    lib("تنظيف مفاتيح الإضاءة", "Wipe light switches", "Punasan ang mga switch", "Lap sakelar lampu"),
+  ],
 };
+
+// Hallways are rooms with type "hall": they have their own tasks, live in
+// the rooms array (so today/share/sync plumbing is unchanged), but appear
+// under a separate section in the app and carry a reserved id prefix.
+export const HALL_EMOJI = "🚪";
+export const HALL_NAME = { ar: "ممر", en: "Hallway", fil: "Pasilyo", id: "Lorong" };
+export const makeHall = (id) => ({
+  id,
+  emoji: HALL_EMOJI,
+  type: "hall",
+  name: { ...HALL_NAME },
+  photo: null,
+  tasks: [],
+});
+export const isHallRoom = (room) => room?.type === "hall";
 
 export const DEFAULT_ROOMS = [
   {

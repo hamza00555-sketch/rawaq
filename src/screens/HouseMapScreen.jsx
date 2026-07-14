@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { t } from "../i18n.js";
 import { press } from "../press.js";
+import { makeHall } from "../data.js";
 import {
   GRID_SIZES,
   blocksFit,
   collides,
   findFreeSpot,
-  isHall,
   newHallId,
   sanitizeMap,
 } from "../houseMap.js";
@@ -84,28 +84,16 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
 
   const roomName = (room) => room.name[lang] || room.name.ar;
 
-  const entries = [
-    ...rooms
-      .filter((room) => blocks[room.id])
-      .map((room) => ({
-        id: room.id,
-        emoji: room.emoji,
-        name: roomName(room),
-        type: room.type,
-        priority: rooms.indexOf(room) + 1,
-        removeLabel: t(lang, "removeFromMap"),
-      })),
-    ...Object.keys(blocks)
-      .filter(isHall)
-      .map((id) => ({
-        id,
-        emoji: "",
-        name: t(lang, "hall"),
-        type: "hall",
-        priority: null,
-        removeLabel: t(lang, "removeFromMap"),
-      })),
-  ];
+  const entries = rooms
+    .filter((room) => blocks[room.id])
+    .map((room) => ({
+      id: room.id,
+      emoji: room.emoji,
+      name: roomName(room),
+      type: room.type,
+      priority: rooms.indexOf(room) + 1,
+      removeLabel: t(lang, "removeFromMap"),
+    }));
 
   const unplaced = rooms.filter((room) => !blocks[room.id]);
 
@@ -131,7 +119,8 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
     setSelected(room.id);
   };
 
-  // Hallways are elongated by nature — try both orientations first.
+  // Hallways are elongated by nature — try both orientations first. A hall
+  // is a first-class room (its own tasks + section), so add it to rooms too.
   const addHall = () => {
     const spot =
       findFreeSpot(blocks, 1, 3, cols, rows) ||
@@ -144,6 +133,7 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
       return;
     }
     const id = newHallId();
+    setRooms([...rooms, makeHall(id)]);
     commit({ ...blocks, [id]: spot });
     setSelected(id);
   };

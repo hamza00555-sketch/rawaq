@@ -5,11 +5,13 @@ import {
   STORAGE_KEYS,
   addDays,
   buildToday,
+  makeHall,
   migrateRooms,
   nextVisitDate,
   taskFingerprint,
   todayStr,
 } from "./data.js";
+import { isHall } from "./houseMap.js";
 import { load, useStoredState } from "./storage.js";
 import {
   ACTIVE_KEY,
@@ -207,6 +209,19 @@ function Household({
 
   const [tab, setTab] = useState("home");
   const [shareOpen, setShareOpen] = useState(false);
+
+  // Halls used to live only as map blocks; now they're first-class rooms
+  // (own tasks + section). Promote any legacy orphan hall block — one that
+  // has no matching room — into a hall room so it keeps its place on the
+  // map and gains a task list. Runs once per mount (per home).
+  useEffect(() => {
+    const known = new Set(rooms.map((r) => r.id));
+    const orphans = Object.keys(houseMap?.blocks || {}).filter(
+      (id) => isHall(id) && !known.has(id)
+    );
+    if (orphans.length) setRooms([...rooms, ...orphans.map(makeHall)]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Keep today's list in sync with the date, the rooms and the completion
   // log (due engine). skipped ids and mom's extras carry over via buildToday.
