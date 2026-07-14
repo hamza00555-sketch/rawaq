@@ -153,3 +153,62 @@ export function roomDone(tasks, roomId) {
   const mine = tasks.filter((t) => t.roomId === roomId);
   return mine.length > 0 && mine.every((t) => t.done);
 }
+
+// Two edge-touching rectangles that line up (same height on the same row, or
+// same width in the same column) fuse into their union rectangle. Returns the
+// merged rect (edges dropped — the shared wall is gone) or null when they
+// don't form a clean rectangle (an L-shape can't be a single block).
+export function hallMergeRect(a, b) {
+  if (a.h === b.h && a.y === b.y && (a.x + a.w === b.x || b.x + b.w === a.x)) {
+    return { x: Math.min(a.x, b.x), y: a.y, w: a.w + b.w, h: a.h };
+  }
+  if (a.w === b.w && a.x === b.x && (a.y + a.h === b.y || b.y + b.h === a.y)) {
+    return { x: a.x, y: Math.min(a.y, b.y), w: a.w, h: a.h + b.h };
+  }
+  return null;
+}
+
+// Auto-merge hallways drawn next to each other. Whenever two hall blocks form
+// a clean rectangle, fuse them into one hall: the earlier one (by rooms order)
+// keeps its id/name/emoji and absorbs the other's tasks; the other hall room
+// and its block are dropped. Repeats until nothing else merges (so a chain of
+// segments collapses fully). Only halls merge — real rooms are never touched.
+// Pure: returns the same rooms/blocks references when nothing changed.
+export function mergeConnectedHalls(rooms, blocks) {
+  let curRooms = rooms;
+  let curBlocks = blocks;
+  for (;;) {
+    const hallIds = Object.keys(curBlocks).filter(isHall);
+    let didMerge = false;
+    for (let i = 0; i < hallIds.length && !didMerge; i++) {
+      for (let j = i + 1; j < hallIds.length; j++) {
+        const idA = hallIds[i];
+        const idB = hallIds[j];
+        const union = hallMergeRect(curBlocks[idA], curBlocks[idB]);
+        if (!union) continue;
+        const iA = curRooms.findIndex((r) => r.id === idA);
+        const iB = curRooms.findIndex((r) => r.id === idB);
+        // the earlier room wins; unknown ids (not yet in rooms) never win
+        const aFirst = iA !== -1 && (iB === -1 || iA <= iB);
+        const primary = aFirst ? idA : idB;
+        const absorbed = aFirst ? idB : idA;
+        const nextBlocks = { ...curBlocks, [primary]: union };
+        delete nextBlocks[absorbed];
+        const absorbedRoom = curRooms.find((r) => r.id === absorbed);
+        curRooms = curRooms
+          .map((r) => {
+            if (r.id !== primary) return r;
+            const have = new Set(r.tasks.map((t) => t.name.ar.trim()));
+            const extra = (absorbedRoom?.tasks || []).filter((t) => !have.has(t.name.ar.trim()));
+            return extra.length ? { ...r, tasks: [...r.tasks, ...extra] } : r;
+          })
+          .filter((r) => r.id !== absorbed);
+        curBlocks = nextBlocks;
+        didMerge = true;
+        break;
+      }
+    }
+    if (!didMerge) break;
+  }
+  return { rooms: curRooms, blocks: curBlocks };
+}

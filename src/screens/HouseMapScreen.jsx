@@ -7,6 +7,7 @@ import {
   OPEN_ROWS,
   collides,
   findFreeSpot,
+  mergeConnectedHalls,
   newHallId,
   sanitizeMap,
 } from "../houseMap.js";
@@ -101,7 +102,18 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
 
   const unplaced = rooms.filter((room) => !blocks[room.id]);
 
-  const commit = (nextBlocks) => setHouseMap({ cols, rows, blocks: nextBlocks });
+  // Committing geometry also auto-merges any hallways that now form a clean
+  // rectangle (drawn/dragged next to each other) — fused into one hall with
+  // one task list. Rooms only change when a merge actually happened.
+  const commit = (nextBlocks) => {
+    const merged = mergeConnectedHalls(rooms, nextBlocks);
+    setHouseMap({ cols, rows, blocks: merged.blocks });
+    if (merged.rooms !== rooms) setRooms(merged.rooms);
+  };
+
+  // Raw block write with no merge pass — used when adding a hall, whose new
+  // room isn't in `rooms` yet (merging here would drop it).
+  const setBlocks = (nextBlocks) => setHouseMap({ cols, rows, blocks: nextBlocks });
 
   const placeRoom = (room) => {
     const spot = findFreeSpot(blocks, 2, 2, cols, rows) || findFreeSpot(blocks, 1, 1, cols, rows);
@@ -128,7 +140,7 @@ export default function HouseMapScreen({ lang, rooms, setRooms, houseMap, setHou
     }
     const id = newHallId();
     setRooms([...rooms, makeHall(id)]);
-    commit({ ...blocks, [id]: spot });
+    setBlocks({ ...blocks, [id]: spot });
     setSelected(id);
   };
 
