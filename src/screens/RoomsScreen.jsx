@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useBackClose } from "../backButton.js";
 import { t } from "../i18n.js";
 import { makeHall } from "../data.js";
 import { newHallId, ownerOf } from "../houseMap.js";
@@ -145,6 +146,11 @@ export default function RoomsScreen({ lang, rooms, setRooms, houseMap, setHouseM
   const [addingHall, setAddingHall] = useState(false); // add-mode: hall vs room
   const [mapOpen, setMapOpen] = useState(false);
   const [snack, setSnack] = useState(null);
+
+  // Android back button steps back through the full-screen sub-views (map,
+  // room detail) instead of exiting the app. Sheets handle their own back.
+  useBackClose(mapOpen, () => setMapOpen(false));
+  useBackClose(!!openRoomId && !mapOpen, () => setOpenRoomId(null));
 
   const openRoom = rooms.find((x) => x.id === openRoomId);
   const editorRoom = rooms.find((x) => x.id === editorRoomId);

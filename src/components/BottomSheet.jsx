@@ -1,7 +1,10 @@
 import { useEffect, useRef } from "react";
 import Icon from "./Icons.jsx";
+import { useBackClose } from "../backButton.js";
 
 export default function BottomSheet({ open, onClose, title, children }) {
+  // Android back button closes the sheet instead of exiting the app.
+  useBackClose(open, onClose);
   // On mobile, the tap that opens the sheet fires a delayed "ghost click"
   // once the overlay has rendered. If the opening button sat where the
   // backdrop now is (e.g. a top-of-screen button), that stray click would

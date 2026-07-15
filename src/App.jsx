@@ -29,6 +29,7 @@ import { useShareSync } from "./useShareSync.js";
 import { useHouseSync } from "./useHouseSync.js";
 import { notify } from "./notify.js";
 import { getPushToken, savePushToken } from "./push.js";
+import { useBackClose } from "./backButton.js";
 
 import SplashScreen from "./screens/SplashScreen.jsx";
 import WelcomeScreen from "./screens/WelcomeScreen.jsx";
@@ -211,6 +212,10 @@ function Household({
 
   const [tab, setTab] = useState("home");
   const [shareOpen, setShareOpen] = useState(false);
+
+  // Android back button from any non-home tab returns to Home instead of
+  // exiting the app. (Sheets/sub-views register their own back handlers.)
+  useBackClose(tab !== "home", () => setTab("home"));
 
   // One-time reconcile per mount (per home) for maps drawn before these
   // features existed:
