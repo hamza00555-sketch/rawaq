@@ -10,3 +10,12 @@ export const firebaseConfig = {
 };
 
 export const isFirebaseConfigured = () => !/^PASTE_/.test(firebaseConfig.apiKey);
+
+// Web Push (VAPID) public key for closed-app notifications via FCM.
+// Firebase console → Project settings → Cloud Messaging → Web Push
+// certificates → "Key pair". Paste the public key here. Until it's set,
+// push stays off and only in-app (foreground) notifications fire.
+export const vapidKey = "PASTE_VAPID_KEY";
+
+export const isPushConfigured = () =>
+  isFirebaseConfigured() && !!vapidKey && !/^PASTE_/.test(vapidKey);

@@ -16,6 +16,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Push tokens for closed-app notifications, keyed by share id. Mom writes
+    // her device token + the strings to send; the Cloud Function reads it with
+    // admin privileges (bypassing rules). Never publicly readable, never
+    // deletable by clients.
+    match /pushTokens/{shareId} {
+      allow get, list: if false;
+      allow create, update: if request.resource.data.token is string
+                            && request.resource.data.size() < 4000;
+      allow delete: if false;
+    }
+
     // Linked homes: anyone holding the code (the doc id) can read/write it.
     // The code is a shared secret, like a Wi-Fi password — enough for a
     // family. Capped at ~900KB to stay under the 1MB document limit.

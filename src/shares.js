@@ -22,8 +22,10 @@ let dbPromise = null;
 const getDb = () => {
   if (!dbPromise) {
     dbPromise = Promise.all([import("firebase/app"), import("firebase/firestore")]).then(
-      ([{ initializeApp }, firestore]) => ({
-        db: firestore.getFirestore(initializeApp(firebaseConfig)),
+      ([{ initializeApp, getApps }, firestore]) => ({
+        // Reuse the singleton app (push.js may have created it) to avoid a
+        // duplicate-app error.
+        db: firestore.getFirestore(getApps()[0] || initializeApp(firebaseConfig)),
         firestore,
       })
     );

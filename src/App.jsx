@@ -28,6 +28,7 @@ import { parseShortHash } from "./shares.js";
 import { useShareSync } from "./useShareSync.js";
 import { useHouseSync } from "./useHouseSync.js";
 import { notify } from "./notify.js";
+import { getPushToken, savePushToken } from "./push.js";
 
 import SplashScreen from "./screens/SplashScreen.jsx";
 import WelcomeScreen from "./screens/WelcomeScreen.jsx";
@@ -255,6 +256,27 @@ function Household({
   useShareSync(lastShare, setToday, (n) => {
     if (notifyOn) notify(t(lang, "appName"), t(lang, n > 1 ? "notifWorkerMany" : "notifWorkerOne").replace("{n}", n));
   });
+
+  // Closed-app push: register this device's FCM token against today's share
+  // (with the localized strings to send) so the Cloud Function can alert mom
+  // even when the app is fully closed. No-op until push is configured.
+  useEffect(() => {
+    if (!notifyOn || !lastShare?.id || lastShare.date !== todayStr()) return;
+    let cancelled = false;
+    (async () => {
+      const token = await getPushToken();
+      if (cancelled || !token) return;
+      await savePushToken(lastShare.id, {
+        token,
+        title: t(lang, "appName"),
+        bodyOne: t(lang, "notifWorkerOne"),
+        bodyMany: t(lang, "notifWorkerMany"),
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [notifyOn, lastShare?.id, lastShare?.date, lang]);
 
   // Live sync: a linked home's definition mirrors across devices.
   useHouseSync({
