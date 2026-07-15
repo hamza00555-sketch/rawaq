@@ -1,23 +1,26 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { press } from "../press.js";
 import Icon from "./Icons.jsx";
 
 // One soft banner at a time: visit-today > visit-tomorrow > tasks-changed.
-// It dismisses itself after 5s or when swiped up, and re-arms whenever the
-// message changes. Tapping it still opens the share sheet.
-export default function ReshareBanner({ icon, message, onShare }) {
-  const [hidden, setHidden] = useState(false);
+// It shows once per event: after 5s, a swipe up, or a tap, it tells the
+// parent it was seen (which records the event key and stops re-showing it on
+// every return to Home). Tapping it also opens the share sheet.
+export default function ReshareBanner({ icon, message, onShare, onDismiss }) {
   const startY = useRef(null);
+  const dismiss = useRef(onDismiss);
+  dismiss.current = onDismiss;
 
   useEffect(() => {
-    setHidden(false);
-    const timer = setTimeout(() => setHidden(true), 5000);
+    const timer = setTimeout(() => dismiss.current(), 5000);
     return () => clearTimeout(timer);
-  }, [message]);
+  }, []);
 
-  if (hidden) return null;
+  const tap = press(() => {
+    onShare();
+    dismiss.current();
+  });
 
-  const tap = press(onShare);
   return (
     <button
       type="button"
@@ -33,7 +36,10 @@ export default function ReshareBanner({ icon, message, onShare }) {
         tap.onPointerDown(e);
       }}
       onPointerMove={(e) => {
-        if (startY.current != null && startY.current - e.clientY > 35) setHidden(true);
+        if (startY.current != null && startY.current - e.clientY > 35) {
+          startY.current = null;
+          dismiss.current();
+        }
         tap.onPointerMove(e);
       }}
     >

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { LANGS, WORKER_LANGS, t } from "../i18n.js";
 import { contractEnd, formatDate, isContractExpired, nextVisitDate, remainingVisits, todayStr } from "../data.js";
 import { press } from "../press.js";
+import { notifyPermission, requestNotify } from "../notify.js";
 import Icon from "../components/Icons.jsx";
 
 // 2023-01-01 was a Sunday — reference week for localized weekday names.
@@ -21,11 +22,29 @@ const resetAllData = () => {
   window.location.replace(window.location.pathname);
 };
 
-export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history, contract, setContract, uiSize, setUiSize, workerLang, setWorkerLang }) {
+export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history, contract, setContract, uiSize, setUiSize, workerLang, setWorkerLang, notifyOn, setNotifyOn }) {
   const [nameDraft, setNameDraft] = useState(owner);
   const [savedMsg, setSavedMsg] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [notifBlocked, setNotifBlocked] = useState(false);
   const firstRender = useRef(true);
+
+  // Turning notifications on requests device permission first.
+  const toggleNotify = async (on) => {
+    if (!on) {
+      setNotifyOn(false);
+      return;
+    }
+    let perm = notifyPermission();
+    if (perm === "default") perm = await requestNotify();
+    if (perm === "granted") {
+      setNotifBlocked(false);
+      setNotifyOn(true);
+    } else {
+      setNotifBlocked(true);
+      setNotifyOn(false);
+    }
+  };
 
   // Auto-save the name (debounced) — no Save button.
   useEffect(() => {
@@ -133,6 +152,37 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
             </button>
           </div>
         </div>
+      </div>
+
+      <h2 className="section-title">{t(lang, "notifTitle")}</h2>
+      <div className="card">
+        <div className="setting-row">
+          <span>{t(lang, "notifWorker")}</span>
+          <div className="seg" style={{ flex: 1, maxWidth: 280 }}>
+            <button
+              type="button"
+              className={`seg-btn ${!notifyOn ? "active" : ""}`}
+              aria-pressed={!notifyOn}
+              {...press(() => toggleNotify(false))}
+            >
+              {t(lang, "off")}
+            </button>
+            <button
+              type="button"
+              className={`seg-btn ${notifyOn ? "active" : ""}`}
+              aria-pressed={notifyOn}
+              {...press(() => toggleNotify(true))}
+            >
+              {t(lang, "on")}
+            </button>
+          </div>
+        </div>
+        {notifBlocked && (
+          <p className="muted" role="alert" style={{ marginTop: 8, color: "var(--danger)" }}>
+            {t(lang, "notifBlocked")}
+          </p>
+        )}
+        <p className="muted" style={{ marginTop: 8, fontSize: 13 }}>{t(lang, "notifHint")}</p>
       </div>
 
       <h2 className="section-title">{t(lang, "ownerName")}</h2>

@@ -27,6 +27,7 @@ import { decodeWorkerHash } from "./share.js";
 import { parseShortHash } from "./shares.js";
 import { useShareSync } from "./useShareSync.js";
 import { useHouseSync } from "./useHouseSync.js";
+import { notify } from "./notify.js";
 
 import SplashScreen from "./screens/SplashScreen.jsx";
 import WelcomeScreen from "./screens/WelcomeScreen.jsx";
@@ -57,6 +58,7 @@ function MainApp() {
   const [lang, setLang] = useStoredState(STORAGE_KEYS.lang, "ar");
   const [theme, setTheme] = useStoredState(STORAGE_KEYS.theme, "light");
   const [uiSize, setUiSize] = useStoredState(STORAGE_KEYS.uiSize, "normal");
+  const [notifyOn, setNotifyOn] = useStoredState("rawaq_notify", false);
   const [homes, setHomes] = useStoredState(HOMES_KEY, [
     { id: "default", name: "بيتي", houseId: newHouseCode() },
   ]);
@@ -161,6 +163,8 @@ function MainApp() {
       setTheme={setTheme}
       uiSize={uiSize}
       setUiSize={setUiSize}
+      notifyOn={notifyOn}
+      setNotifyOn={setNotifyOn}
       homes={homes}
       activeHome={activeHome}
       onSwitchHome={switchHome}
@@ -183,6 +187,8 @@ function Household({
   setTheme,
   uiSize,
   setUiSize,
+  notifyOn,
+  setNotifyOn,
   homes,
   activeHome,
   onSwitchHome,
@@ -200,6 +206,7 @@ function Household({
   const [contract, setContract] = useStoredState(homeKey(homeId, "contract"), null);
   const [houseMap, setHouseMap] = useStoredState(homeKey(homeId, "houseMap"), { blocks: {} });
   const [workerLang, setWorkerLang] = useStoredState(homeKey(homeId, "workerLang"), "fil");
+  const [bannerSeen, setBannerSeen] = useStoredState(homeKey(homeId, "bannerSeen"), "");
 
   const [tab, setTab] = useState("home");
   const [shareOpen, setShareOpen] = useState(false);
@@ -243,8 +250,11 @@ function Household({
     if (!sameIds) setToday(fresh);
   }, [rooms, taskLog, today, setToday]);
 
-  // Live sync: worker's checkmarks flow into today via the share doc.
-  useShareSync(lastShare, setToday);
+  // Live sync: worker's checkmarks flow into today via the share doc. When the
+  // worker completes new tasks, ping mom on her device (if she enabled it).
+  useShareSync(lastShare, setToday, (n) => {
+    if (notifyOn) notify(t(lang, "appName"), t(lang, n > 1 ? "notifWorkerMany" : "notifWorkerOne").replace("{n}", n));
+  });
 
   // Live sync: a linked home's definition mirrors across devices.
   useHouseSync({
@@ -288,13 +298,15 @@ function Household({
     lastShare?.date === todayStr() && taskFingerprint(safeToday.tasks) !== lastShare.fingerprint;
 
   const nextVisit = nextVisitDate(contract);
+  // Each banner carries an event key so it shows once per event, not on every
+  // return to Home (bannerSeen persists the last dismissed key per home).
   const banner =
     nextVisit === todayStr() && lastShare?.date !== todayStr()
-      ? { icon: "sparkles", message: t(lang, "visitTodayBanner") }
+      ? { key: `visit-${nextVisit}`, icon: "sparkles", message: t(lang, "visitTodayBanner") }
       : nextVisit === addDays(todayStr(), 1)
-        ? { icon: "leaf", message: t(lang, "visitTomorrowBanner") }
+        ? { key: `soon-${nextVisit}`, icon: "leaf", message: t(lang, "visitTomorrowBanner") }
         : needsReshare
-          ? { icon: "refresh", message: t(lang, "tasksChanged") }
+          ? { key: `tasks-${taskFingerprint(safeToday.tasks)}`, icon: "refresh", message: t(lang, "tasksChanged") }
           : null;
 
   const showShareUi = tab === "home" || tab === "today";
@@ -355,11 +367,18 @@ function Household({
           setUiSize={setUiSize}
           workerLang={workerLang}
           setWorkerLang={setWorkerLang}
+          notifyOn={notifyOn}
+          setNotifyOn={setNotifyOn}
         />
       )}
 
-      {showShareUi && banner && (
-        <ReshareBanner icon={banner.icon} message={banner.message} onShare={() => setShareOpen(true)} />
+      {showShareUi && banner && banner.key !== bannerSeen && (
+        <ReshareBanner
+          icon={banner.icon}
+          message={banner.message}
+          onShare={() => setShareOpen(true)}
+          onDismiss={() => setBannerSeen(banner.key)}
+        />
       )}
 
       <BottomNav
