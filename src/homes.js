@@ -89,13 +89,14 @@ export function readHomeDef(id) {
   };
 }
 
-// Write a remote definition into a home's local storage, preserving any
-// local room photos by id (they never travel).
+// Write a remote definition into a home's local storage. Room photos now
+// travel as small thumbnails: the remote photo wins when present, otherwise
+// any existing local photo is kept (never wiped).
 export function writeHomeDef(id, def) {
   if (Array.isArray(def.rooms)) {
     const localPhotos = {};
     for (const r of loadRaw(id, "rooms", [])) if (r.photo) localPhotos[r.id] = r.photo;
-    const merged = def.rooms.map((r) => ({ ...r, photo: localPhotos[r.id] || null }));
+    const merged = def.rooms.map((r) => ({ ...r, photo: r.photo ?? localPhotos[r.id] ?? null }));
     localStorage.setItem(homeKey(id, "rooms"), JSON.stringify(merged));
   }
   if (def.houseMap) localStorage.setItem(homeKey(id, "houseMap"), JSON.stringify(def.houseMap));
