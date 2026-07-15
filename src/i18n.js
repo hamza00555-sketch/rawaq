@@ -127,7 +127,7 @@ export const T = {
     shareError: "تعذر إنشاء الرابط — تحققي من الاتصال",
     shareErrorRules: "تعذر إنشاء الرابط — يجب تحديث قواعد الأمان في Firebase",
     retry: "إعادة المحاولة",
-    myHomes: "بيوتي",
+    myHomes: "منازلي",
     linkHome: "ربط هذا البيت",
     linking: "جارِ الربط…",
     unlinkHome: "فك الربط",
