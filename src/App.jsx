@@ -291,11 +291,13 @@ function Household({
     contract,
     workerLang,
     owner,
+    lastShare,
     setRooms,
     setHouseMap,
     setContract,
     setWorkerLang,
     setOwner,
+    setLastShare,
   });
 
   const finishVisit = () => {

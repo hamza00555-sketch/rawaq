@@ -15,11 +15,15 @@ const PHOTO_BUDGET = 650_000; // cap on base64 chars spent on photos per doc
 const PASSTHROUGH_MAX = 80_000; // a photo already this small is sent as-is
 
 // Non-photo fields — the def base, shared by push and apply for stable order.
+// lastShare rides along so every linked device listens to the SAME worker
+// share doc — otherwise only the device that created the link sees the
+// worker's checkmarks.
 const core = (s) => ({
   houseMap: s.houseMap ?? { blocks: {} },
   contract: s.contract ?? null,
   workerLang: s.workerLang ?? "fil",
   owner: s.owner ?? "",
+  lastShare: s.lastShare ?? null,
 });
 
 // Cheap change signature: structure + a fingerprint of each photo (length +
@@ -77,16 +81,18 @@ export function useHouseSync({
   contract,
   workerLang,
   owner,
+  lastShare,
   setRooms,
   setHouseMap,
   setContract,
   setWorkerLang,
   setOwner,
+  setLastShare,
 }) {
   const lastSynced = useRef(null); // full def JSON last pushed OR applied (echo guard)
   const lastSig = useRef(null); // cheap change signature (push trigger)
   const local = useRef({});
-  local.current = { rooms, houseMap, contract, workerLang, owner };
+  local.current = { rooms, houseMap, contract, workerLang, owner, lastShare };
   const thumbs = useRef(new Map()); // source photo → thumbnail cache
 
   // Remote → local
@@ -108,12 +114,20 @@ export function useHouseSync({
         contract: def.contract,
         workerLang: def.workerLang,
         owner: def.owner,
+        lastShare: def.lastShare,
       });
       setRooms(appliedRooms);
       setHouseMap(def.houseMap);
       setContract(def.contract);
       setWorkerLang(def.workerLang);
       setOwner(def.owner);
+      // Only adopt a newer share link, never overwrite a fresher local one
+      // (e.g. if this device just reshared). Compare by sharedAt timestamp.
+      if (def.lastShare && setLastShare) {
+        setLastShare((prev) =>
+          !prev || (def.lastShare.sharedAt || 0) >= (prev.sharedAt || 0) ? def.lastShare : prev
+        );
+      }
     });
   }, [houseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -134,5 +148,5 @@ export function useHouseSync({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [houseId, rooms, houseMap, contract, workerLang, owner]);
+  }, [houseId, rooms, houseMap, contract, workerLang, owner, lastShare]);
 }
