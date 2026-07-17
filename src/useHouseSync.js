@@ -32,7 +32,12 @@ const changeSig = (s) =>
   JSON.stringify({
     rooms: (s.rooms || []).map((r) => ({ ...r, photo: null })),
     ...core(s),
-    photos: (s.rooms || []).map((r) => (r.photo ? `${r.id}:${r.photo.length}:${r.photo.slice(-24)}` : "")),
+    // When photo upload is off, photos never leave the device — reflect that in
+    // the signature so toggling the setting triggers a push that strips them.
+    photos:
+      s.photoUpload === false
+        ? "off"
+        : (s.rooms || []).map((r) => (r.photo ? `${r.id}:${r.photo.length}:${r.photo.slice(-24)}` : "")),
   });
 
 // Build the doc: rooms with thumbnail photos (compressed, cached, budgeted)
@@ -40,6 +45,10 @@ const changeSig = (s) =>
 // (e.g. a thumbnail we received) passes through so it stays byte-identical
 // across devices — no re-compression tug-of-war.
 async function buildDef(s, cache) {
+  // Photo upload turned off: strip every photo from the uploaded doc.
+  if (s.photoUpload === false) {
+    return { rooms: (s.rooms || []).map((r) => ({ ...r, photo: null })), ...core(s) };
+  }
   // Photos share the doc with room names, tasks and the map — budget them
   // against the space those leave, so a task-heavy home can't push the doc
   // over the limit.
@@ -82,6 +91,7 @@ export function useHouseSync({
   workerLang,
   owner,
   lastShare,
+  photoUpload = true,
   setRooms,
   setHouseMap,
   setContract,
@@ -92,7 +102,7 @@ export function useHouseSync({
   const lastSynced = useRef(null); // full def JSON last pushed OR applied (echo guard)
   const lastSig = useRef(null); // cheap change signature (push trigger)
   const local = useRef({});
-  local.current = { rooms, houseMap, contract, workerLang, owner, lastShare };
+  local.current = { rooms, houseMap, contract, workerLang, owner, lastShare, photoUpload };
   const thumbs = useRef(new Map()); // source photo → thumbnail cache
 
   // Remote → local
@@ -115,6 +125,9 @@ export function useHouseSync({
         workerLang: def.workerLang,
         owner: def.owner,
         lastShare: def.lastShare,
+        // this device's own upload preference — so an "off" device doesn't
+        // keep re-stripping photos a linked "on" device re-adds (no ping-pong)
+        photoUpload: local.current.photoUpload,
       });
       setRooms(appliedRooms);
       setHouseMap(def.houseMap);
@@ -148,5 +161,5 @@ export function useHouseSync({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [houseId, rooms, houseMap, contract, workerLang, owner, lastShare]);
+  }, [houseId, rooms, houseMap, contract, workerLang, owner, lastShare, photoUpload]);
 }

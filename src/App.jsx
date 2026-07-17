@@ -61,6 +61,7 @@ function MainApp() {
   const [theme, setTheme] = useStoredState(STORAGE_KEYS.theme, "light");
   const [uiSize, setUiSize] = useStoredState(STORAGE_KEYS.uiSize, "normal");
   const [notifyOn, setNotifyOn] = useStoredState("rawaq_notify", false);
+  const [photoUpload, setPhotoUpload] = useStoredState("rawaq_photo_upload", true);
   const [homes, setHomes] = useStoredState(HOMES_KEY, [
     { id: "default", name: "بيتي", houseId: newHouseCode() },
   ]);
@@ -167,6 +168,8 @@ function MainApp() {
       setUiSize={setUiSize}
       notifyOn={notifyOn}
       setNotifyOn={setNotifyOn}
+      photoUpload={photoUpload}
+      setPhotoUpload={setPhotoUpload}
       homes={homes}
       activeHome={activeHome}
       onSwitchHome={switchHome}
@@ -191,6 +194,8 @@ function Household({
   setUiSize,
   notifyOn,
   setNotifyOn,
+  photoUpload,
+  setPhotoUpload,
   homes,
   activeHome,
   onSwitchHome,
@@ -292,6 +297,7 @@ function Household({
     workerLang,
     owner,
     lastShare,
+    photoUpload,
     setRooms,
     setHouseMap,
     setContract,
@@ -398,6 +404,8 @@ function Household({
           setWorkerLang={setWorkerLang}
           notifyOn={notifyOn}
           setNotifyOn={setNotifyOn}
+          photoUpload={photoUpload}
+          setPhotoUpload={setPhotoUpload}
         />
       )}
 
@@ -430,6 +438,7 @@ function Household({
         rooms={rooms}
         houseMap={houseMap}
         workerLang={workerLang}
+        photoUpload={photoUpload}
         lastShare={lastShare}
         onShared={setLastShare}
       />

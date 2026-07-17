@@ -8,7 +8,7 @@ import BottomSheet from "./BottomSheet.jsx";
 import QRCanvas from "./QRCanvas.jsx";
 import Icon from "./Icons.jsx";
 
-export default function ShareModal({ open, onClose, lang, today, owner, rooms, houseMap, workerLang, lastShare, onShared }) {
+export default function ShareModal({ open, onClose, lang, today, owner, rooms, houseMap, workerLang, photoUpload = true, lastShare, onShared }) {
   const [copied, setCopied] = useState(false);
   const [state, setState] = useState({ status: "loading", link: "" });
   const openRef = useRef(open);
@@ -27,7 +27,8 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
       lastShare?.link &&
       lastShare.date === todayStr() &&
       lastShare.fingerprint === fingerprint &&
-      (lastShare.workerLang || "fil") === wl
+      (lastShare.workerLang || "fil") === wl &&
+      (lastShare.photos ?? true) === photoUpload
     ) {
       setState({ status: "short", link: lastShare.link });
       return;
@@ -44,7 +45,9 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
     // budget keeps the whole doc under Firestore's 1MB limit (oldest-
     // priority rooms win).
     let photoBudget = 720_000;
-    const placed = rooms.filter((r) => r.photo && blocks[r.id]);
+    // Photo upload can be turned off in Settings — then the worker link
+    // carries no house photos at all.
+    const placed = photoUpload ? rooms.filter((r) => r.photo && blocks[r.id]) : [];
     const thumbs = await Promise.all(
       placed.map((r) => compressImage(r.photo, { maxDim: 640, targetBytes: 60_000 }).catch(() => null))
     );
@@ -95,6 +98,7 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
           date: today.date,
           fingerprint,
           workerLang: wl,
+          photos: photoUpload,
           sharedAt: Date.now(),
         });
       })
@@ -102,7 +106,7 @@ export default function ShareModal({ open, onClose, lang, today, owner, rooms, h
         if (!openRef.current) return;
         setState({ status: "error", link: "", reason: err?.code === "rules" ? "rules" : "network" });
       });
-  }, [today, owner, rooms, houseMap, workerLang, lastShare, onShared]);
+  }, [today, owner, rooms, houseMap, workerLang, photoUpload, lastShare, onShared]);
 
   useEffect(() => {
     if (open) prepare();

@@ -22,7 +22,7 @@ const resetAllData = () => {
   window.location.replace(window.location.pathname);
 };
 
-export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history, contract, setContract, uiSize, setUiSize, workerLang, setWorkerLang, notifyOn, setNotifyOn }) {
+export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, setOwner, history, contract, setContract, uiSize, setUiSize, workerLang, setWorkerLang, notifyOn, setNotifyOn, photoUpload, setPhotoUpload }) {
   const [nameDraft, setNameDraft] = useState(owner);
   const [savedMsg, setSavedMsg] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -183,6 +183,32 @@ export default function SettingsScreen({ lang, setLang, theme, setTheme, owner, 
           </p>
         )}
         <p className="muted" style={{ marginTop: 8, fontSize: 13 }}>{t(lang, "notifHint")}</p>
+      </div>
+
+      <h2 className="section-title">{t(lang, "privacyTitle")}</h2>
+      <div className="card">
+        <div className="setting-row">
+          <span>{t(lang, "photoUpload")}</span>
+          <div className="seg" style={{ flex: 1, maxWidth: 280 }}>
+            <button
+              type="button"
+              className={`seg-btn ${!photoUpload ? "active" : ""}`}
+              aria-pressed={!photoUpload}
+              {...press(() => setPhotoUpload(false))}
+            >
+              {t(lang, "off")}
+            </button>
+            <button
+              type="button"
+              className={`seg-btn ${photoUpload ? "active" : ""}`}
+              aria-pressed={photoUpload}
+              {...press(() => setPhotoUpload(true))}
+            >
+              {t(lang, "on")}
+            </button>
+          </div>
+        </div>
+        <p className="muted" style={{ marginTop: 8, fontSize: 13 }}>{t(lang, "photoUploadHint")}</p>
       </div>
 
       <h2 className="section-title">{t(lang, "ownerName")}</h2>
